@@ -15,7 +15,7 @@ class GameEngine
     case action
     when 'create_room'
       create_room(user_id, data)
-    when 'join', 'move', 'restart'
+    when 'join', 'move', 'restart_vote'
       room_action(user_id, data)
     else
       { error: 'unknown action' }

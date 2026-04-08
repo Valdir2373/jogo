@@ -6,14 +6,14 @@ require_relative 'lib/game_engine'
 
 Faye::WebSocket.load_adapter('puma')
 
-ENGINE = GameEngine.new
+ENGINE       = GameEngine.new
 
-CONNECTIONS     = Hash.new { |h, k| h[k] = [] } # room_id  => [ws]
-WS_USER         = {}                              # ws       => user_id
-USER_ROOM       = {}                              # user_id  => room_id
-CONN_MUTEX      = Mutex.new
+CONNECTIONS  = Hash.new { |h, k| h[k] = [] } # room_id => [ws]
+WS_USER      = {}                              # ws      => user_id
+USER_ROOM    = {}                              # user_id => room_id  (survives disconnect)
+CONN_MUTEX   = Mutex.new
 
-VALID_USER_ID   = /\A[a-zA-Z0-9\-]{1,64}\z/
+VALID_UID    = /\A[a-zA-Z0-9\-]{1,64}\z/
 
 configure do
   set :public_folder, File.join(__dir__, 'public')
@@ -25,34 +25,28 @@ end
 
 get '/api/rooms' do
   user_id = request.params['user_id'].to_s
-  halt 400, 'invalid user_id' unless user_id.match?(VALID_USER_ID)
+  halt 400, 'invalid user_id' unless user_id.match?(VALID_UID)
 
   room_id = CONN_MUTEX.synchronize { USER_ROOM[user_id] }
   room    = room_id ? ENGINE.get_room(room_id) : nil
 
   content_type :json
   if room
-    JSON.generate({
-      rooms: [{
-        room_id:   room_id,
-        game_type: room[:type],
-        ready:     room[:players].length == 2
-      }]
-    })
+    JSON.generate({ rooms: [{ room_id: room_id, game_type: room[:type], ready: room[:players].length == 2 }] })
   else
+    # Room was cleaned up — remove stale reference
+    CONN_MUTEX.synchronize { USER_ROOM.delete(user_id) } if room_id
     JSON.generate({ rooms: [] })
   end
 end
 
 get '/ws' do
-  unless Faye::WebSocket.websocket?(request.env)
-    halt 400, 'WebSocket only'
-  end
+  halt 400, 'WebSocket only' unless Faye::WebSocket.websocket?(request.env)
 
   ws      = Faye::WebSocket.new(request.env)
   user_id = request.params['user_id'].to_s
 
-  unless user_id.match?(VALID_USER_ID)
+  unless user_id.match?(VALID_UID)
     ws.close(4001, 'invalid user_id')
     return ws.rack_response
   end
@@ -63,11 +57,11 @@ get '/ws' do
     begin
       raw = event.data
       if raw.bytesize > 4096
-        ws.send(JSON.generate({ event: 'error', payload: { message: 'message too large' } }))
+        ws.send(json_event('error', { message: 'message too large' }))
         next
       end
 
-      data   = JSON.parse(raw)
+      data = JSON.parse(raw)
       next unless data.is_a?(Hash)
 
       action  = data['action']&.to_s&.slice(0, 64)
@@ -76,7 +70,7 @@ get '/ws' do
       data['room_id'] = room_id
 
       unless action&.match?(/\A[a-z_]{1,64}\z/)
-        ws.send(JSON.generate({ event: 'error', payload: { message: 'invalid action' } }))
+        ws.send(json_event('error', { message: 'invalid action' }))
         next
       end
 
@@ -86,47 +80,52 @@ get '/ws' do
         current_room_id = result[:payload][:room_id]
         CONN_MUTEX.synchronize do
           CONNECTIONS[current_room_id] << ws
-          WS_USER[ws]             = user_id
-          USER_ROOM[user_id]      = current_room_id
+          WS_USER[ws]          = user_id
+          USER_ROOM[user_id]   = current_room_id
         end
-        ws.send(JSON.generate({ event: result[:event], payload: result[:payload] }))
+        ws.send(json_event(result[:event], result[:payload]))
 
       elsif result[:broadcast]
         if action == 'join' && room_id
+          reconnecting = false
           CONN_MUTEX.synchronize do
             unless CONNECTIONS[room_id].include?(ws)
+              room         = ENGINE.get_room(room_id)
+              reconnecting = room && room[:players].include?(user_id)
               CONNECTIONS[room_id] << ws
-              current_room_id       = room_id
-              WS_USER[ws]           = user_id
-              USER_ROOM[user_id]    = room_id
+              current_room_id    = room_id
+              WS_USER[ws]        = user_id
+              USER_ROOM[user_id] = room_id
             end
           end
+          # Notify the other player that this user is back online
+          broadcast(room_id, 'player_reconnected', { user_id: user_id }) if reconnecting
         end
         broadcast(room_id || current_room_id, result[:event], result[:payload])
 
       elsif result[:error]
-        ws.send(JSON.generate({ event: 'error', payload: { message: result[:error] } }))
+        ws.send(json_event('error', { message: result[:error] }))
 
       else
-        ws.send(JSON.generate({ event: result[:event], payload: result[:payload] }))
+        ws.send(json_event(result[:event], result[:payload]))
       end
 
     rescue JSON::ParserError
-      ws.send(JSON.generate({ event: 'error', payload: { message: 'invalid json' } }))
+      ws.send(json_event('error', { message: 'invalid json' }))
     rescue => e
       STDERR.puts "WebSocket error: #{e.message}"
-      ws.send(JSON.generate({ event: 'error', payload: { message: 'internal error' } }))
+      ws.send(json_event('error', { message: 'internal error' }))
     end
   end
 
   ws.on :close do
-    uid    = nil
-    rid    = nil
+    uid = nil
+    rid = nil
 
     CONN_MUTEX.synchronize do
       uid = WS_USER.delete(ws)
       if uid
-        rid = USER_ROOM.delete(uid)
+        rid = USER_ROOM[uid]       # keep USER_ROOM — room persists
         if rid
           CONNECTIONS[rid].delete(ws)
           CONNECTIONS.delete(rid) if CONNECTIONS[rid].empty?
@@ -134,28 +133,25 @@ get '/ws' do
       end
     end
 
-    # Notify remaining player that opponent left — room is over
-    if rid
-      ENGINE.close_room(rid)
-      broadcast(rid, 'opponent_left', { message: 'O outro jogador saiu. A sala foi encerrada.' })
-      CONN_MUTEX.synchronize { CONNECTIONS.delete(rid) }
-    end
+    # Room stays alive — just tell the other player the opponent is offline
+    broadcast(rid, 'player_disconnected', { user_id: uid }) if rid && uid
   end
 
   ws.rack_response
 end
 
-# Serve frontend SPA — must come after all API/WS routes
+# SPA fallback — after all API/WS routes
 get '/*' do
   index = File.join(settings.public_folder, 'index.html')
-  if File.exist?(index)
-    send_file index
-  else
-    halt 404, 'Not found'
-  end
+  File.exist?(index) ? send_file(index) : halt(404, 'Not found')
+end
+
+def json_event(event, payload)
+  JSON.generate({ event: event, payload: payload })
 end
 
 def broadcast(room_id, event, payload)
   conns = CONN_MUTEX.synchronize { CONNECTIONS[room_id].dup }
-  conns.each { |c| c.send(JSON.generate({ event: event, payload: payload })) }
+  msg   = json_event(event, payload)
+  conns.each { |c| c.send(msg) }
 end
