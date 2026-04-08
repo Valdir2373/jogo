@@ -56,7 +56,7 @@ export default function App() {
     <Layout>
       <div className="flex flex-col items-center gap-8 w-full max-w-sm">
         <p className="text-pink-400 text-sm text-center">
-          Jogos feitos com amor, só pra você, Veronica 💕
+          Jogos feitos com amor, só pra você, Mel 💕
         </p>
 
         {activeRooms.length > 0 && (

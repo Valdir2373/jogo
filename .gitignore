@@ -3,6 +3,10 @@ backend/vendor/
 backend/.bundle/
 backend/Gemfile.lock
 
+ideias_de_jogos.txt
+#ss
+mudanças.txt
+
 # Node
 frontend/node_modules/
 frontend/dist/
