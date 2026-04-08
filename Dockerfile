@@ -23,6 +23,9 @@ COPY backend/ ./
 # Copy built frontend into public/ so Sinatra can serve it
 COPY --from=frontend-build /app/frontend/dist ./public
 
+# Run unit + controller tests (fail build if any test fails)
+RUN bundle exec ruby -Itest test/run_all.rb
+
 EXPOSE 8080
 
 CMD ["bundle", "exec", "puma", "-C", "config/puma.rb", "config.ru"]
