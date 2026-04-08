@@ -1,0 +1,75 @@
+IDEIAS DE JOGOS — tic-tac-love
+================================================
+
+Jogos que NÃO são por turno (diferente do jogo da velha)
+
+---
+
+1. ADIVINHE O NÚMERO  [2-6 jogadores]
+   Um jogador pensa num número secreto (1-100). Os outros têm tentativas
+   ilimitadas e recebem dicas "maior" / "menor" a cada palpite. Quem adivinhar
+   primeiro vira o próximo a escolher o número.
+
+2. STOP / ADEDONHA  [2-8 jogadores]
+   Uma letra aleatória aparece. Todos têm 30s para preencher categorias
+   (nome, animal, comida, cidade, etc.) com palavras que comecem com ela.
+   Respostas iguais valem metade dos pontos. Mais rápido a travar o timer
+   ganha bônus.
+
+3. PALAVRAS ENCADEADAS  [2-8 jogadores]
+   Cada jogador tem 10s para digitar uma palavra que comece com a última
+   letra da palavra anterior. Quem demorar ou repetir perde uma vida (3 vidas).
+   Último vivo vence.
+
+4. QUIZ RELÂMPAGO  [2-8 jogadores]
+   Perguntas de cultura geral aparecem para todos ao mesmo tempo. Primeiro a
+   responder certo ganha o ponto. Quem errar perde 0,5 ponto. Placar em tempo
+   real. 10-20 perguntas por rodada.
+
+5. QUEM SOU EU?  [3-6 jogadores]
+   Cada jogador recebe uma palavra secreta (personagem, objeto, animal) que
+   apenas os outros veem. Faz perguntas de sim/não para descobrir quem é.
+   Quem adivinhar com menos perguntas vence.
+
+6. PEDRA PAPEL TESOURA  [2-6 jogadores]
+   Torneio eliminatório. Todos escolhem simultaneamente. Ganha quem vencer
+   mais rodadas no bracket. Suporte à variante "lagarto + Spock" (5 opções).
+
+7. JOGO DA MEMÓRIA  [2-4 jogadores]
+   Grid de cartas viradas. Por turno, vira 2; se igual, fica e joga de novo;
+   se diferente, viram de volta e passa a vez. Quem coletar mais pares vence.
+   Diferente do jogo da velha: tem mais jogadores e sorte envolvida.
+
+8. BLACKJACK  [2-6 jogadores]
+   Todos jogam contra a banca (um jogador ou automática). Cartas distribuídas
+   em tempo real. Pedir carta ("hit") ou parar ("stand"). Mais próximo de 21
+   sem estourar vence. Sem apostas — só pontuação.
+
+9. CORRIDA DE LETRAS  [2-8 jogadores]
+   Uma categoria é sorteada (ex: "frutas"). Jogadores têm 60s para digitar
+   o máximo de exemplos válidos. Cada um vale 1 ponto. Respostas repetidas
+   entre jogadores são anuladas para ambos.
+
+10. VERDADE OU DESAFIO (texto)  [3-8 jogadores]
+    Sem câmera, tudo em texto. O jogador da vez escolhe verdade ou desafio.
+    Os outros votam a pergunta ou desafio mais legal de uma lista gerada.
+    Jogador confirma que cumpriu — confiança entre os participantes.
+
+11. BOMBA RELÓGIO  [3-8 jogadores]
+    Uma "bomba" passa de jogador em jogador a cada 1-3s (aleatório). Quem
+    estiver com a bomba quando o timer explodir perde uma vida. Último vivo
+    vence. Dificuldade aumenta a cada rodada (timer menor).
+
+12. TELEPATIA  [2-4 jogadores]
+    Ambos os jogadores devem escrever simultaneamente a mesma palavra dada
+    uma categoria, sem combinar. Se escreverem igual → ponto para a dupla.
+    Jogo cooperativo, não competitivo. Meta: 10 acertos consecutivos.
+
+---
+
+NOTAS DE IMPLEMENTAÇÃO
+- Todos os jogos usam WebSocket puro, sem banco de dados
+- Jogos cooperativos (Telepatia) mudam a dinâmica da sala
+- Jogos 3-8 jogadores aproveitam o sistema de limite por jogo
+- Quiz Relâmpago requer uma base de perguntas (JSON local)
+- Bomba Relógio é puramente server-driven (timer no backend)

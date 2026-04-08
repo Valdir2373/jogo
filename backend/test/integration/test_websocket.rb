@@ -259,4 +259,64 @@ class TestWebSocketIntegration < Minitest::Test
   ensure
     ws2&.close rescue nil; ws1&.close rescue nil
   end
+
+  # ── game_vote ─────────────────────────────────────────────────────────────
+
+  def test_one_game_vote_broadcasts_pending
+    ws1, msgs1, ws2, msgs2, room_id = setup_game(uid('gv1a'), uid('gv2a'))
+
+    # Capture lengths BEFORE sending to avoid race with async delivery
+    b1 = msgs1.length; b2 = msgs2.length
+    ws1.send(JSON.generate({ action: 'game_vote', room_id: room_id, game_type: 'tic_tac_toe' }))
+    wait_for(msgs1, b1 + 1); wait_for(msgs2, b2 + 1)
+    ws1.close; ws2.close
+
+    evt = msgs1.last
+    assert_equal 'game_vote_pending', evt['event']
+    refute_nil evt['payload']['game_votes']
+  end
+
+  def test_both_game_votes_trigger_game_changed
+    ws1, msgs1, ws2, msgs2, room_id = setup_game(uid('gv1b'), uid('gv2b'))
+
+    ws1.send(JSON.generate({ action: 'game_vote', room_id: room_id, game_type: 'tic_tac_toe' }))
+    wait_for(msgs1, msgs1.length + 1)
+
+    b1 = msgs1.length; b2 = msgs2.length
+    ws2.send(JSON.generate({ action: 'game_vote', room_id: room_id, game_type: 'tic_tac_toe' }))
+    wait_for(msgs1, b1 + 1); wait_for(msgs2, b2 + 1)
+    ws1.close; ws2.close
+
+    assert_equal 'game_changed', msgs1.last['event']
+    assert_equal 'tic_tac_toe', msgs1.last['payload']['game_type']
+    assert_equal [], msgs1.last['payload']['kicked']
+  end
+
+  def test_game_vote_unknown_game_returns_error
+    ws1, msgs1, ws2, msgs2, room_id = setup_game(uid('gve1'), uid('gve2'))
+
+    before = msgs1.length
+    ws1.send(JSON.generate({ action: 'game_vote', room_id: room_id, game_type: 'chess' }))
+    wait_for(msgs1, before + 1)
+    ws1.close; ws2.close
+
+    assert_equal 'error', msgs1.last['event']
+  end
+
+  def test_game_changed_resets_board
+    ws1, msgs1, ws2, msgs2, room_id = setup_game(uid('gcr1'), uid('gcr2'))
+    win_game(ws1, msgs1, ws2, room_id)  # finish a game first
+
+    ws1.send(JSON.generate({ action: 'game_vote', room_id: room_id, game_type: 'tic_tac_toe' }))
+    wait_for(msgs1, msgs1.length + 1)
+
+    b1 = msgs1.length
+    ws2.send(JSON.generate({ action: 'game_vote', room_id: room_id, game_type: 'tic_tac_toe' }))
+    wait_for(msgs1, b1 + 1)
+    ws1.close; ws2.close
+
+    payload = msgs1.last['payload']
+    assert_equal Array.new(9, nil), payload['state']['board']
+    assert_nil payload['state']['winner']
+  end
 end

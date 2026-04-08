@@ -10,6 +10,7 @@ ENGINE       = GameEngine.new
 
 CONNECTIONS  = Hash.new { |h, k| h[k] = [] } # room_id => [ws]
 WS_USER      = {}                              # ws      => user_id
+USER_WS      = {}                              # user_id => ws  (inverse of WS_USER)
 USER_ROOM    = {}                              # user_id => room_id  (survives disconnect)
 CONN_MUTEX   = Mutex.new
 
@@ -32,7 +33,8 @@ get '/api/rooms' do
 
   content_type :json
   if room
-    JSON.generate({ rooms: [{ room_id: room_id, game_type: room[:type], ready: room[:players].length == 2 }] })
+    info = GameEngine::GAMES[room[:type]]
+    JSON.generate({ rooms: [{ room_id: room_id, game_type: room[:type], game_name: info&.dig(:name), ready: room[:players].length >= 2 }] })
   else
     # Room was cleaned up — remove stale reference
     CONN_MUTEX.synchronize { USER_ROOM.delete(user_id) } if room_id
@@ -81,9 +83,28 @@ get '/ws' do
         CONN_MUTEX.synchronize do
           CONNECTIONS[current_room_id] << ws
           WS_USER[ws]          = user_id
+          USER_WS[user_id]     = ws
           USER_ROOM[user_id]   = current_room_id
         end
         ws.send(json_event(result[:event], result[:payload]))
+
+      elsif result[:game_changed]
+        rid = room_id || current_room_id
+        # Notify kicked players before broadcasting to remaining
+        result[:kicked].each do |kicked_uid|
+          kicked_ws = CONN_MUTEX.synchronize do
+            kws = USER_WS[kicked_uid]
+            if kws
+              CONNECTIONS[rid].delete(kws)
+              WS_USER.delete(kws)
+              USER_WS.delete(kicked_uid)
+              USER_ROOM.delete(kicked_uid)
+            end
+            kws
+          end
+          kicked_ws&.send(json_event('player_kicked', { game_type: result[:payload][:game_type] }))
+        end
+        broadcast(rid, result[:event], result[:payload])
 
       elsif result[:broadcast]
         if action == 'join' && room_id
@@ -95,10 +116,10 @@ get '/ws' do
               CONNECTIONS[room_id] << ws
               current_room_id    = room_id
               WS_USER[ws]        = user_id
+              USER_WS[user_id]   = ws
               USER_ROOM[user_id] = room_id
             end
           end
-          # Notify the other player that this user is back online
           broadcast(room_id, 'player_reconnected', { user_id: user_id }) if reconnecting
         end
         broadcast(room_id || current_room_id, result[:event], result[:payload])
@@ -125,6 +146,7 @@ get '/ws' do
     CONN_MUTEX.synchronize do
       uid = WS_USER.delete(ws)
       if uid
+        USER_WS.delete(uid)
         rid = USER_ROOM[uid]       # keep USER_ROOM — room persists
         if rid
           CONNECTIONS[rid].delete(ws)
