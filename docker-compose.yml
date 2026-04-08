@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - SESSION_SECRET=${SESSION_SECRET:-dev_secret_change_me}
+      - RACK_ENV=development
+    volumes: []
