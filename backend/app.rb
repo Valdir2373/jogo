@@ -13,8 +13,6 @@ CONNECTIONS = Hash.new { |h, k| h[k] = [] } # room_id => [ws, ...]
 CONNECTIONS_MUTEX = Mutex.new
 
 configure do
-  set :session_secret, ENV.fetch('SESSION_SECRET', SecureRandom.hex(64))
-  enable :sessions
   set :public_folder, File.join(__dir__, 'public')
 end
 
