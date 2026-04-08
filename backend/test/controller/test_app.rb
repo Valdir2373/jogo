@@ -17,6 +17,25 @@ class TestAppController < Minitest::Test
     assert_equal 'ok', last_response.body
   end
 
+  # --- /api/rooms ---
+
+  def test_rooms_invalid_user_id_returns_400
+    get '/api/rooms?user_id='
+    assert_equal 400, last_response.status
+  end
+
+  def test_rooms_valid_user_with_no_room_returns_empty
+    get '/api/rooms?user_id=some-valid-user-id'
+    assert_equal 200, last_response.status
+    body = JSON.parse(last_response.body)
+    assert_equal [], body['rooms']
+  end
+
+  def test_rooms_content_type_is_json
+    get '/api/rooms?user_id=test-user-123'
+    assert last_response.content_type.include?('application/json')
+  end
+
   # --- static frontend ---
 
   def test_root_returns_index_html

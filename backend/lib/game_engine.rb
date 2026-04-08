@@ -26,6 +26,10 @@ class GameEngine
     @mutex.synchronize { @rooms[room_id] }
   end
 
+  def close_room(room_id)
+    @mutex.synchronize { @rooms.delete(room_id) }
+  end
+
   private
 
   def create_room(user_id, data)

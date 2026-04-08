@@ -5,12 +5,12 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export function Button({ variant = 'primary', className = '', children, ...props }: ButtonProps) {
-  const base = 'px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-pink-400 disabled:opacity-50 disabled:cursor-not-allowed'
+  const base = 'px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed'
 
   const variants = {
-    primary: 'bg-gradient-to-r from-pink-500 to-red-500 text-white hover:from-pink-600 hover:to-red-600 shadow-md hover:shadow-lg',
-    secondary: 'bg-white text-pink-600 border-2 border-pink-300 hover:bg-pink-50',
-    ghost: 'text-pink-500 hover:text-pink-700 hover:bg-pink-50',
+    primary:   'bg-pink-600 text-white hover:bg-pink-500 shadow-lg shadow-pink-900/40',
+    secondary: 'bg-zinc-900 text-pink-400 border border-pink-800 hover:border-pink-500 hover:text-pink-300',
+    ghost:     'text-zinc-400 hover:text-pink-400 hover:bg-zinc-900',
   }
 
   return (
