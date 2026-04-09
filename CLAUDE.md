@@ -1,4 +1,6 @@
 # CLAUDE.md — tic-tac-love
+# não faça commits contribuidor
+
 
 ## Visão Geral
 
