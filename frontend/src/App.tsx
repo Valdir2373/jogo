@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getUserId } from './userId'
 import { TicTacToe } from './games/TicTacToe'
+import { Hangman } from './games/Hangman'
 
 const userId = getUserId()
 
@@ -52,11 +53,24 @@ export default function App() {
     )
   }
 
+  if (active?.gameType === 'hangman') {
+    return (
+      <Layout>
+        <Hangman
+          userId={userId}
+          resumeRoomId={active.roomId || null}
+          onBack={backToMenu}
+          onGameChanged={handleGameChanged}
+        />
+      </Layout>
+    )
+  }
+
   return (
     <Layout>
       <div className="flex flex-col items-center gap-8 w-full max-w-sm">
         <p className="text-pink-400 text-sm text-center">
-          Jogos feitos com amor, só pra você, Mel 💕
+          Jogos feitos com amor, só pra você, Veronica 💕
         </p>
 
         {activeRooms.length > 0 && (
@@ -86,17 +100,30 @@ export default function App() {
 
         <div className="w-full">
           <p className="text-xs text-zinc-500 uppercase tracking-widest mb-2">Jogos</p>
-          <button onClick={() => enterGame('tic_tac_toe')}
-            className="w-full bg-zinc-900 border border-zinc-800 hover:border-pink-700 rounded-xl px-5 py-4 text-left transition-all group">
-            <div className="flex items-center gap-4">
-              <span className="text-2xl font-bold text-pink-500 group-hover:scale-110 transition-transform inline-block">X O</span>
-              <div>
-                <div className="font-semibold text-white">Jogo da Velha</div>
-                <div className="text-sm text-zinc-500">2 jogadores</div>
+          <div className="flex flex-col gap-2">
+            <button onClick={() => enterGame('tic_tac_toe')}
+              className="w-full bg-zinc-900 border border-zinc-800 hover:border-pink-700 rounded-xl px-5 py-4 text-left transition-all group">
+              <div className="flex items-center gap-4">
+                <span className="text-2xl font-bold text-pink-500 group-hover:scale-110 transition-transform inline-block">X O</span>
+                <div>
+                  <div className="font-semibold text-white">Jogo da Velha</div>
+                  <div className="text-sm text-zinc-500">2 jogadores</div>
+                </div>
+                <span className="ml-auto text-zinc-600 group-hover:text-pink-500 transition-colors">→</span>
               </div>
-              <span className="ml-auto text-zinc-600 group-hover:text-pink-500 transition-colors">→</span>
-            </div>
-          </button>
+            </button>
+            <button onClick={() => enterGame('hangman')}
+              className="w-full bg-zinc-900 border border-zinc-800 hover:border-pink-700 rounded-xl px-5 py-4 text-left transition-all group">
+              <div className="flex items-center gap-4">
+                <span className="text-2xl font-bold text-pink-500 group-hover:scale-110 transition-transform inline-block">🪢</span>
+                <div>
+                  <div className="font-semibold text-white">Forca</div>
+                  <div className="text-sm text-zinc-500">2-6 jogadores</div>
+                </div>
+                <span className="ml-auto text-zinc-600 group-hover:text-pink-500 transition-colors">→</span>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
     </Layout>

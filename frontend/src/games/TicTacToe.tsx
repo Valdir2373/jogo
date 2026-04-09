@@ -18,6 +18,7 @@ interface GameVotes { [userId: string]: string }
 
 const AVAILABLE_GAMES = [
   { type: 'tic_tac_toe', name: 'Jogo da Velha', maxPlayers: 2 },
+  { type: 'hangman',     name: 'Forca',          maxPlayers: 6 },
 ]
 
 interface TicTacToeProps {

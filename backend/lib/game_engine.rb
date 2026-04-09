@@ -1,11 +1,13 @@
 require_relative 'games/tic_tac_toe'
+require_relative 'games/hangman'
 
 class GameEngine
   ROOM_TIMEOUT = 30 * 60 # 30 minutes
 
   # Central registry: game_type => { name, max_players, class }
   GAMES = {
-    'tic_tac_toe' => { name: 'Jogo da Velha', max_players: 2, klass: TicTacToe }
+    'tic_tac_toe' => { name: 'Jogo da Velha', max_players: 2, klass: TicTacToe },
+    'hangman'     => { name: 'Forca',          max_players: 6, klass: Hangman }
   }.freeze
 
   def self.game_info(game_type)
@@ -22,7 +24,7 @@ class GameEngine
     case data['action']
     when 'create_room'  then create_room(user_id, data)
     when 'game_vote'    then game_vote_action(user_id, data)
-    when 'join', 'move', 'restart_vote'
+    when 'join', 'move', 'restart_vote', 'set_word', 'guess'
       room_action(user_id, data)
     else
       { error: 'unknown action' }
