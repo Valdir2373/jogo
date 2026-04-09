@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Button } from '../components/Button'
 import { Input } from '../components/Input'
 import { useWebSocket } from '../useWebSocket'
+import { GAMES as ALL_GAMES } from '../GAMES'
 
 interface GameState {
   board: (string | null)[]
@@ -16,10 +17,7 @@ interface GameState {
 
 interface GameVotes { [userId: string]: string }
 
-const AVAILABLE_GAMES = [
-  { type: 'tic_tac_toe', name: 'Jogo da Velha', maxPlayers: 2 },
-  { type: 'hangman',     name: 'Forca',          maxPlayers: 6 },
-]
+const AVAILABLE_GAMES = ALL_GAMES.map(g => ({ type: g.type, name: g.name, maxPlayers: g.maxPlayers }))
 
 interface TicTacToeProps {
   userId: string

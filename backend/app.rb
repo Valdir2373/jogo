@@ -7,14 +7,18 @@ require_relative 'lib/game_engine'
 Faye::WebSocket.load_adapter('puma')
 
 ENGINE       = GameEngine.new
-
 CONNECTIONS  = Hash.new { |h, k| h[k] = [] } # room_id => [ws]
 WS_USER      = {}                              # ws      => user_id
 USER_WS      = {}                              # user_id => ws  (inverse of WS_USER)
 USER_ROOM    = {}                              # user_id => room_id  (survives disconnect)
 CONN_MUTEX   = Mutex.new
-
 VALID_UID    = /\A[a-zA-Z0-9\-]{1,64}\z/
+
+ENGINE.set_broadcaster do |room_id, event, payload|
+  conns = CONN_MUTEX.synchronize { CONNECTIONS[room_id].dup }
+  msg   = JSON.generate({ event: event, payload: payload })
+  conns.each { |c| c.send(msg) rescue nil }
+end
 
 configure do
   set :public_folder, File.join(__dir__, 'public')
@@ -34,7 +38,7 @@ get '/api/rooms' do
   content_type :json
   if room
     info = GameEngine::GAMES[room[:type]]
-    JSON.generate({ rooms: [{ room_id: room_id, game_type: room[:type], game_name: info&.dig(:name), ready: room[:players].length >= 2 }] })
+    JSON.generate({ rooms: [{ room_id: room_id, room_name: room[:name], game_type: room[:type], game_name: info&.dig(:name), ready: room[:players].length >= 2 }] })
   else
     # Room was cleaned up — remove stale reference
     CONN_MUTEX.synchronize { USER_ROOM.delete(user_id) } if room_id

@@ -31,8 +31,6 @@ class Hangman
 
   def self.handle_join(room, user_id, _data)
     players = room[:players]
-    return { error: 'room full' } if players.length >= 6 && !players.include?(user_id)
-
     players << user_id unless players.include?(user_id)
 
     # First player is the word owner for the current round

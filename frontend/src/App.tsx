@@ -1,7 +1,20 @@
 import { useState, useEffect } from 'react'
 import { getUserId } from './userId'
-import { TicTacToe } from './games/TicTacToe'
-import { Hangman } from './games/Hangman'
+import { GAMES } from './GAMES'
+import { TicTacToe }   from './games/TicTacToe'
+import { Hangman }     from './games/Hangman'
+import { GuessNumber } from './games/GuessNumber'
+import { Rps }         from './games/Rps'
+import { MemoryGame }  from './games/MemoryGame'
+import { Telepathy }   from './games/Telepathy'
+import { WordChain }   from './games/WordChain'
+import { TimeBomb }    from './games/TimeBomb'
+import { LetterRace }  from './games/LetterRace'
+import { WhoAmI }      from './games/WhoAmI'
+import { StopGame }    from './games/StopGame'
+import { Blackjack }   from './games/Blackjack'
+import { Quiz }        from './games/Quiz'
+import { TruthDare }   from './games/TruthDare'
 
 const userId = getUserId()
 
@@ -9,14 +22,44 @@ type ActiveGame = { roomId: string; gameType: string }
 
 interface ActiveRoom {
   room_id: string
+  room_name: string
   game_type: string
   game_name: string
   ready: boolean
 }
 
+// ── Settings (localStorage) ───────────────────────────────────────────────────
+
+const THEMES = [
+  { id: 'pink',   label: 'Rosa',   bg: 'bg-black',       accent: 'text-pink-400',   border: 'border-pink-700',   dot: 'bg-pink-500'   },
+  { id: 'blue',   label: 'Azul',   bg: 'bg-zinc-950',    accent: 'text-blue-400',   border: 'border-blue-700',   dot: 'bg-blue-500'   },
+  { id: 'purple', label: 'Roxo',   bg: 'bg-zinc-950',    accent: 'text-purple-400', border: 'border-purple-700', dot: 'bg-purple-500' },
+  { id: 'green',  label: 'Verde',  bg: 'bg-zinc-950',    accent: 'text-emerald-400',border: 'border-emerald-700',dot: 'bg-emerald-500'},
+  { id: 'orange', label: 'Laranja',bg: 'bg-zinc-950',    accent: 'text-orange-400', border: 'border-orange-700', dot: 'bg-orange-500' },
+]
+
+function loadSettings() {
+  return {
+    displayName: localStorage.getItem('display_name') ?? '',
+    themeId:     localStorage.getItem('color_theme')  ?? 'pink',
+  }
+}
+
+function saveSettings(displayName: string, themeId: string) {
+  localStorage.setItem('display_name', displayName)
+  localStorage.setItem('color_theme',  themeId)
+}
+
+// ── App ───────────────────────────────────────────────────────────────────────
+
 export default function App() {
-  const [active, setActive]           = useState<ActiveGame | null>(null)
-  const [activeRooms, setActiveRooms] = useState<ActiveRoom[]>([])
+  const [active,       setActive]       = useState<ActiveGame | null>(null)
+  const [activeRooms,  setActiveRooms]  = useState<ActiveRoom[]>([])
+  const [showSettings, setShowSettings] = useState(false)
+  const [settings,     setSettings]     = useState(loadSettings)
+  const [nameInput,    setNameInput]    = useState(loadSettings().displayName)
+
+  const theme = THEMES.find(t => t.id === settings.themeId) ?? THEMES[0]
 
   const fetchRooms = () => {
     fetch(`/api/rooms?user_id=${encodeURIComponent(userId)}`)
@@ -27,70 +70,107 @@ export default function App() {
 
   useEffect(() => { fetchRooms() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const enterGame = (gameType: string, roomId?: string) => {
-    setActive({ gameType, roomId: roomId ?? '' })
+  const enterGame = (gameType: string, roomId?: string) => setActive({ gameType, roomId: roomId ?? '' })
+  const backToMenu = () => { setActive(null); fetchRooms() }
+  const handleGameChanged = (roomId: string, gameType: string) => setActive({ gameType, roomId })
+
+  const applySettings = () => {
+    const s = { displayName: nameInput, themeId: settings.themeId }
+    setSettings(s)
+    saveSettings(s.displayName, s.themeId)
+    setShowSettings(false)
   }
 
-  const backToMenu = () => {
-    setActive(null)
-    fetchRooms()
-  }
+  const gameProps = (_gameType: string, roomId?: string) => ({
+    userId,
+    resumeRoomId: roomId ?? null,
+    onBack:        backToMenu,
+    onGameChanged: handleGameChanged,
+  })
 
-  const handleGameChanged = (roomId: string, gameType: string) => {
-    setActive({ gameType, roomId })
-  }
-
-  if (active?.gameType === 'tic_tac_toe') {
-    return (
-      <Layout>
-        <TicTacToe
-          userId={userId}
-          resumeRoomId={active.roomId || null}
-          onBack={backToMenu}
-          onGameChanged={handleGameChanged}
-        />
-      </Layout>
-    )
-  }
-
-  if (active?.gameType === 'hangman') {
-    return (
-      <Layout>
-        <Hangman
-          userId={userId}
-          resumeRoomId={active.roomId || null}
-          onBack={backToMenu}
-          onGameChanged={handleGameChanged}
-        />
-      </Layout>
-    )
+  // Route to the active game component
+  if (active) {
+    const props = gameProps(active.gameType, active.roomId)
+    const map: Record<string, React.ReactNode> = {
+      tic_tac_toe:  <TicTacToe  {...props} />,
+      hangman:      <Hangman     {...props} />,
+      guess_number: <GuessNumber {...props} />,
+      rps:          <Rps         {...props} />,
+      memory_game:  <MemoryGame  {...props} />,
+      telepathy:    <Telepathy   {...props} />,
+      word_chain:   <WordChain   {...props} />,
+      time_bomb:    <TimeBomb    {...props} />,
+      letter_race:  <LetterRace  {...props} />,
+      who_am_i:     <WhoAmI      {...props} />,
+      stop_game:    <StopGame    {...props} />,
+      blackjack:    <Blackjack   {...props} />,
+      quiz:         <Quiz        {...props} />,
+      truth_dare:   <TruthDare   {...props} />,
+    }
+    const component = map[active.gameType]
+    if (component) return <Layout bgClass={theme.bg}>{component}</Layout>
   }
 
   return (
-    <Layout>
-      <div className="flex flex-col items-center gap-8 w-full max-w-sm">
-        <p className="text-pink-400 text-sm text-center">
-          Jogos feitos com amor, só pra você, Veronica 💕
-        </p>
+    <Layout bgClass={theme.bg}>
+      <div className="flex flex-col items-center gap-6 w-full max-w-sm">
+        {/* Header */}
+        <div className="flex justify-between items-center w-full">
+          <div />
+          <p className={`${theme.accent} text-sm text-center`}>
+            Jogos feitos com amor, só pra você, Veronica 💕
+          </p>
+          <button onClick={() => { setNameInput(settings.displayName); setShowSettings(v => !v) }}
+            className="text-zinc-500 hover:text-zinc-300 transition-colors text-lg">⚙</button>
+        </div>
 
+        {/* Settings panel */}
+        {showSettings && (
+          <div className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex flex-col gap-3">
+            <p className="text-white font-semibold text-sm">Configurações</p>
+            <div>
+              <label className="text-xs text-zinc-500 uppercase tracking-widest block mb-1">Seu nome</label>
+              <input value={nameInput} onChange={e => setNameInput(e.target.value)} maxLength={20}
+                placeholder="Como quer ser chamado?"
+                className="w-full bg-zinc-800 border border-zinc-700 focus:border-pink-600 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none" />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-500 uppercase tracking-widest block mb-2">Tema de cores</label>
+              <div className="flex gap-2 flex-wrap">
+                {THEMES.map(t => (
+                  <button key={t.id} onClick={() => setSettings(prev => ({ ...prev, themeId: t.id }))}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition-all ${settings.themeId === t.id ? 'border-zinc-400 text-white' : 'border-zinc-700 text-zinc-500 hover:border-zinc-500'}`}>
+                    <span className={`w-2.5 h-2.5 rounded-full ${t.dot}`} />
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button onClick={applySettings}
+              className={`w-full py-2 rounded-lg text-sm font-semibold ${theme.accent} bg-zinc-800 hover:bg-zinc-700 transition-colors border ${theme.border}`}>
+              Salvar
+            </button>
+          </div>
+        )}
+
+        {/* Active rooms (continue) */}
         {activeRooms.length > 0 && (
           <div className="w-full">
             <p className="text-xs text-zinc-500 uppercase tracking-widest mb-2">Continuar</p>
             <div className="flex flex-col gap-2">
               {activeRooms.map(room => (
-                <button key={room.room_id}
-                  onClick={() => enterGame(room.game_type, room.room_id)}
-                  className="w-full bg-zinc-900 border border-zinc-800 hover:border-pink-700 rounded-xl px-5 py-3 text-left transition-all group">
+                <button key={room.room_id} onClick={() => enterGame(room.game_type, room.room_id)}
+                  className={`w-full bg-zinc-900 border border-zinc-800 hover:${theme.border} rounded-xl px-5 py-3 text-left transition-all group`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-mono text-pink-400 font-bold tracking-widest text-sm">
-                        {room.room_id}
+                      <div className={`font-semibold ${theme.accent}`}>
+                        {room.room_name || room.room_id}
                       </div>
                       <div className="text-xs text-zinc-500 mt-0.5">
                         {room.game_name} · {room.ready ? 'Em andamento' : 'Aguardando jogador'}
                       </div>
                     </div>
-                    <span className="text-zinc-600 group-hover:text-pink-500 transition-colors">→</span>
+                    <span className="text-zinc-600 group-hover:text-zinc-300 transition-colors">→</span>
                   </div>
                 </button>
               ))}
@@ -98,31 +178,23 @@ export default function App() {
           </div>
         )}
 
+        {/* Game list */}
         <div className="w-full">
           <p className="text-xs text-zinc-500 uppercase tracking-widest mb-2">Jogos</p>
           <div className="flex flex-col gap-2">
-            <button onClick={() => enterGame('tic_tac_toe')}
-              className="w-full bg-zinc-900 border border-zinc-800 hover:border-pink-700 rounded-xl px-5 py-4 text-left transition-all group">
-              <div className="flex items-center gap-4">
-                <span className="text-2xl font-bold text-pink-500 group-hover:scale-110 transition-transform inline-block">X O</span>
-                <div>
-                  <div className="font-semibold text-white">Jogo da Velha</div>
-                  <div className="text-sm text-zinc-500">2 jogadores</div>
+            {GAMES.map(g => (
+              <button key={g.type} onClick={() => enterGame(g.type)}
+                className={`w-full bg-zinc-900 border border-zinc-800 hover:${theme.border} rounded-xl px-5 py-3 text-left transition-all group`}>
+                <div className="flex items-center gap-3">
+                  <span className="text-xl w-8 text-center">{g.icon}</span>
+                  <div>
+                    <div className="font-semibold text-white text-sm">{g.name}</div>
+                    <div className="text-xs text-zinc-500">{g.description}</div>
+                  </div>
+                  <span className="ml-auto text-zinc-600 group-hover:text-zinc-300 transition-colors">→</span>
                 </div>
-                <span className="ml-auto text-zinc-600 group-hover:text-pink-500 transition-colors">→</span>
-              </div>
-            </button>
-            <button onClick={() => enterGame('hangman')}
-              className="w-full bg-zinc-900 border border-zinc-800 hover:border-pink-700 rounded-xl px-5 py-4 text-left transition-all group">
-              <div className="flex items-center gap-4">
-                <span className="text-2xl font-bold text-pink-500 group-hover:scale-110 transition-transform inline-block">🪢</span>
-                <div>
-                  <div className="font-semibold text-white">Forca</div>
-                  <div className="text-sm text-zinc-500">2-6 jogadores</div>
-                </div>
-                <span className="ml-auto text-zinc-600 group-hover:text-pink-500 transition-colors">→</span>
-              </div>
-            </button>
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -130,9 +202,9 @@ export default function App() {
   )
 }
 
-function Layout({ children }: { children: React.ReactNode }) {
+function Layout({ children, bgClass }: { children: React.ReactNode; bgClass: string }) {
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+    <div className={`min-h-screen ${bgClass} flex flex-col items-center justify-center p-4`}>
       {children}
     </div>
   )

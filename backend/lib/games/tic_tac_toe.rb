@@ -31,7 +31,6 @@ class TicTacToe
     state   = room[:state]
     players = room[:players]
 
-    return { error: 'room full' } if players.length >= 2 && !players.include?(user_id)
 
     players << user_id unless players.include?(user_id)
 

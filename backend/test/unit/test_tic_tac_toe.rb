@@ -59,9 +59,14 @@ class TestTicTacToe < Minitest::Test
     assert_equal 2, result[:payload][:players].length
   end
 
-  def test_third_player_rejected
-    room = setup_ready_room
-    result = TicTacToe.handle(room, 'p3', { 'action' => 'join' })
+  def test_third_player_rejected_via_engine
+    # Capacity enforcement moved to GameEngine#dispatch — verify via engine
+    require_relative '../../lib/game_engine'
+    engine = GameEngine.new
+    rid = engine.process_event('p1', { 'action' => 'create_room', 'game_type' => 'tic_tac_toe' })[:payload][:room_id]
+    engine.process_event('p1', { 'action' => 'join', 'room_id' => rid })
+    engine.process_event('p2', { 'action' => 'join', 'room_id' => rid })
+    result = engine.process_event('p3', { 'action' => 'join', 'room_id' => rid })
     assert result[:error]
   end
 

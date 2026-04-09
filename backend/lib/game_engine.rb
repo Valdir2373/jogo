@@ -1,13 +1,37 @@
+require 'securerandom'
 require_relative 'games/tic_tac_toe'
 require_relative 'games/hangman'
+require_relative 'games/guess_number'
+require_relative 'games/rps'
+require_relative 'games/memory_game'
+require_relative 'games/telepathy'
+require_relative 'games/word_chain'
+require_relative 'games/time_bomb'
+require_relative 'games/letter_race'
+require_relative 'games/who_am_i'
+require_relative 'games/stop_game'
+require_relative 'games/blackjack'
+require_relative 'games/quiz'
+require_relative 'games/truth_dare'
 
 class GameEngine
-  ROOM_TIMEOUT = 30 * 60 # 30 minutes
+  ROOM_TIMEOUT = 30 * 60
 
-  # Central registry: game_type => { name, max_players, class }
   GAMES = {
-    'tic_tac_toe' => { name: 'Jogo da Velha', max_players: 2, klass: TicTacToe },
-    'hangman'     => { name: 'Forca',          max_players: 6, klass: Hangman }
+    'tic_tac_toe'  => { name: 'Jogo da Velha',       min_players: 2, max_players: 2, variable: false, klass: TicTacToe   },
+    'hangman'      => { name: 'Forca',                min_players: 2, max_players: 6, variable: true,  klass: Hangman     },
+    'guess_number' => { name: 'Adivinhe o Número',    min_players: 2, max_players: 6, variable: true,  klass: GuessNumber },
+    'rps'          => { name: 'Pedra Papel Tesoura',  min_players: 2, max_players: 6, variable: true,  klass: Rps         },
+    'memory_game'  => { name: 'Jogo da Memória',      min_players: 2, max_players: 4, variable: true,  klass: MemoryGame  },
+    'telepathy'    => { name: 'Telepatia',            min_players: 2, max_players: 4, variable: true,  klass: Telepathy   },
+    'word_chain'   => { name: 'Palavras Encadeadas',  min_players: 2, max_players: 8, variable: true,  klass: WordChain   },
+    'time_bomb'    => { name: 'Bomba Relógio',        min_players: 3, max_players: 8, variable: true,  klass: TimeBomb    },
+    'letter_race'  => { name: 'Corrida de Letras',    min_players: 2, max_players: 8, variable: true,  klass: LetterRace  },
+    'who_am_i'     => { name: 'Quem Sou Eu?',         min_players: 3, max_players: 6, variable: true,  klass: WhoAmI      },
+    'stop_game'    => { name: 'Stop',                 min_players: 2, max_players: 8, variable: true,  klass: StopGame    },
+    'blackjack'    => { name: 'Blackjack',            min_players: 2, max_players: 6, variable: true,  klass: Blackjack   },
+    'quiz'         => { name: 'Quiz Relâmpago',       min_players: 2, max_players: 8, variable: true,  klass: Quiz        },
+    'truth_dare'   => { name: 'Verdade ou Desafio',   min_players: 3, max_players: 8, variable: true,  klass: TruthDare   },
   }.freeze
 
   def self.game_info(game_type)
@@ -15,20 +39,38 @@ class GameEngine
   end
 
   def initialize
-    @rooms = {}
-    @mutex = Mutex.new
+    @rooms      = {}
+    @mutex      = Mutex.new
+    @broadcaster = nil
     start_cleanup_thread
   end
 
+  def set_broadcaster(&block)
+    @broadcaster = block
+  end
+
   def process_event(user_id, data)
-    case data['action']
-    when 'create_room'  then create_room(user_id, data)
-    when 'game_vote'    then game_vote_action(user_id, data)
-    when 'join', 'move', 'restart_vote', 'set_word', 'guess'
-      room_action(user_id, data)
-    else
-      { error: 'unknown action' }
-    end
+    result = case data['action']
+             when 'create_room'  then create_room(user_id, data)
+             when 'game_vote'    then game_vote_action(user_id, data)
+             when 'join', 'move', 'restart_vote',
+                  'set_word', 'guess',
+                  'set_number', 'guess',
+                  'pick', 'flip',
+                  'submit', 'next_round',
+                  'submit_word', 'turn_expired',
+                  'bomb_exploded',
+                  'submit_words',
+                  'assign_words', 'ask_question', 'answer', 'guess_word',
+                  'stop', 'hit', 'stand', 'new_hand',
+                  'next_question', 'choose', 'vote_question', 'confirm_done', 'skip'
+               room_action(user_id, data)
+             else
+               { error: 'unknown action' }
+             end
+
+    schedule_timer(result) if result[:start_timer]
+    result
   end
 
   def get_room(room_id)
@@ -36,33 +78,64 @@ class GameEngine
   end
 
   def close_room(room_id)
-    @mutex.synchronize { @rooms.delete(room_id) }
+    @mutex.synchronize do
+      room = @rooms[room_id]
+      room[:timer_thread]&.kill if room
+      @rooms.delete(room_id)
+    end
+  end
+
+  def rooms_for_user(user_id)
+    @mutex.synchronize do
+      @rooms.select { |_, room| room[:players].include?(user_id) }
+    end
   end
 
   private
 
   def create_room(user_id, data)
-    game_type = data['game_type'] || 'tic_tac_toe'
+    game_type = data['game_type'].to_s
+    game_type = 'tic_tac_toe' if game_type.empty?
     return { error: 'unknown game type' } unless GAMES.key?(game_type)
+
+    info = GAMES[game_type]
+
+    # Custom max players (clamped to game limits)
+    req_max = data['max_players'].to_i
+    max_players = if info[:variable] && req_max >= info[:min_players] && req_max <= info[:max_players]
+      req_max
+    else
+      info[:max_players]
+    end
+
+    # Room name
+    raw_name = data['room_name'].to_s.strip.slice(0, 30)
 
     room_id = generate_room_id
     @mutex.synchronize do
+      idx = @rooms.count { |_, r| r[:players].include?(user_id) }
+      name = raw_name.empty? ? "Sala #{idx + 1}" : raw_name
+
       @rooms[room_id] = {
         id:            room_id,
+        name:          name,
         type:          game_type,
         players:       [],
         state:         initial_state_for(game_type),
-        game_votes:    {},   # user_id => game_type they voted for
-        last_activity: Time.now
+        game_votes:    {},
+        max_players:   max_players,
+        last_activity: Time.now,
+        timer_thread:  nil,
+        timer_token:   nil,
       }
     end
 
-    { event: 'room_created', payload: { room_id: room_id, game_type: game_type } }
+    { event: 'room_created', payload: { room_id: room_id, game_type: game_type, room_name: @rooms[room_id][:name] } }
   end
 
   def game_vote_action(user_id, data)
-    room_id      = data['room_id']
-    new_game     = data['game_type']&.to_s
+    room_id  = data['room_id']
+    new_game = data['game_type']&.to_s
     return { error: 'missing room_id' }   unless room_id
     return { error: 'unknown game type' } unless GAMES.key?(new_game)
 
@@ -74,47 +147,41 @@ class GameEngine
     room[:last_activity] = Time.now
 
     votes = room[:game_votes]
-
-    # Switch when enough players agreed: min(current_players, new_max_players)
-    votes_needed = [room[:players].length, GAMES[new_game][:max_players]].min
+    info  = GAMES[new_game]
+    votes_needed = [room[:players].length, info[:max_players]].min
     votes_cast   = votes.count { |_, gt| gt == new_game }
 
     if votes_cast >= votes_needed
-
-      kicked  = trim_players(room, GAMES[new_game][:max_players])
-      room[:type]        = new_game
-      room[:state]       = initial_state_for(new_game)
-      room[:game_votes]  = {}
-
-      # Re-trigger turn setup if enough players
-      if room[:players].length == GAMES[new_game][:max_players]
-        room[:state][:current_turn] = room[:players][0]
-      end
+      kicked = trim_players(room, info[:max_players])
+      room[:timer_thread]&.kill
+      room[:type]       = new_game
+      room[:state]      = initial_state_for(new_game)
+      room[:game_votes] = {}
+      room[:max_players] = info[:max_players]
 
       {
         game_changed: true,
         kicked:       kicked,
         event:        'game_changed',
         payload: {
-          game_type:    new_game,
-          game_name:    GAMES[new_game][:name],
-          max_players:  GAMES[new_game][:max_players],
-          players:      room[:players],
-          kicked:       kicked,
-          state:        room[:state]
+          game_type:   new_game,
+          game_name:   info[:name],
+          max_players: info[:max_players],
+          players:     room[:players],
+          kicked:      kicked,
+          state:       room[:state]
         }
       }
     else
-      # Still waiting for the other player's vote
       {
         broadcast: true,
         event:     'game_vote_pending',
         payload: {
-          votes:       votes,
-          game_votes:  votes,
-          game_type:   new_game,
-          game_name:   GAMES[new_game][:name],
-          voted_by:    user_id
+          votes:      votes,
+          game_votes: votes,
+          game_type:  new_game,
+          game_name:  info[:name],
+          voted_by:   user_id
         }
       }
     end
@@ -135,7 +202,43 @@ class GameEngine
     info = GAMES[room[:type]]
     return { error: 'unknown game type' } unless info
 
+    # Centralised join capacity check
+    if data['action'] == 'join'
+      players = room[:players]
+      max     = room[:max_players] || info[:max_players]
+      return { error: 'room full' } if players.length >= max && !players.include?(user_id)
+    end
+
     info[:klass].handle(room, user_id, data)
+  end
+
+  def schedule_timer(result)
+    rid   = result[:timer_room_id]
+    delay = result[:start_timer]
+    tdata = result[:timer_data]
+    token = result[:timer_token]
+    return unless rid && delay && tdata
+
+    room = @mutex.synchronize { @rooms[rid] }
+    return unless room
+
+    room[:timer_thread]&.kill
+    room[:timer_token] = token
+
+    room[:timer_thread] = Thread.new do
+      sleep delay.to_f
+      @mutex.synchronize do
+        r = @rooms[rid]
+        next unless r
+        next if token && r[:timer_token] != token
+
+        timer_result = dispatch(r, '__timer__', tdata)
+        if timer_result[:broadcast] && @broadcaster
+          @broadcaster.call(rid, timer_result[:event], timer_result[:payload])
+          schedule_timer(timer_result) if timer_result[:start_timer]
+        end
+      end
+    end
   end
 
   def initial_state_for(game_type)
@@ -143,12 +246,9 @@ class GameEngine
     info ? info[:klass].initial_state : {}
   end
 
-  # Keep owner (index 0) + most recently joined up to max_players.
-  # Returns array of kicked user_ids.
   def trim_players(room, max_players)
     players = room[:players]
     return [] if players.length <= max_players
-
     kept   = [players[0]] + players[1..].last(max_players - 1)
     kicked = players - kept
     room[:players] = kept

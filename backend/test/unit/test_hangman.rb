@@ -58,10 +58,13 @@ class TestHangman < Minitest::Test
     assert_equal 6, room[:players].length
   end
 
-  def test_join_seventh_player_rejected
-    room = make_room
-    6.times { |i| Hangman.handle(room, "p#{i}", { 'action' => 'join' }) }
-    result = Hangman.handle(room, 'p6_extra', { 'action' => 'join' })
+  def test_join_seventh_player_rejected_via_engine
+    # Capacity enforcement moved to GameEngine#dispatch — verify via engine
+    require_relative '../../lib/game_engine'
+    engine = GameEngine.new
+    rid = engine.process_event('p0', { 'action' => 'create_room', 'game_type' => 'hangman' })[:payload][:room_id]
+    6.times { |i| engine.process_event("p#{i}", { 'action' => 'join', 'room_id' => rid }) }
+    result = engine.process_event('p6_extra', { 'action' => 'join', 'room_id' => rid })
     assert result[:error]
   end
 
