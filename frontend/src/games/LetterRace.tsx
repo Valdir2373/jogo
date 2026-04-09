@@ -55,7 +55,7 @@ export function LetterRace({ userId, resumeRoomId, onBack, onGameChanged }: Prop
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [state?.phase, submitted]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (room.screen === 'lobby') return <GameLobby title="Corrida de Letras" gameType="letter_race" error={room.error} onCreateRoom={() => room.createRoom()} onJoinRoom={room.joinRoom} onBack={onBack} />
+  if (room.screen === 'lobby') return <GameLobby title="Corrida de Letras" gameType="letter_race" error={room.error} onCreateRoom={room.createRoom} onBack={onBack} />
   if (room.screen === 'waiting') return <WaitingRoom roomId={room.roomId} onBack={onBack} />
 
   const hasSubmitted = state?.submitted_ids.includes(userId) ?? false

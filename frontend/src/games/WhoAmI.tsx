@@ -32,7 +32,7 @@ export function WhoAmI({ userId, resumeRoomId, onBack, onGameChanged }: Props) {
   const onState = useCallback((s: Record<string, unknown>) => setState(s as unknown as WAIState), [])
   const room = useGameRoom({ userId, gameType: 'who_am_i', resumeRoomId, onBack, onGameChanged, onState })
 
-  if (room.screen === 'lobby') return <GameLobby title="Quem Sou Eu?" gameType="who_am_i" error={room.error} onCreateRoom={() => room.createRoom()} onJoinRoom={room.joinRoom} onBack={onBack} />
+  if (room.screen === 'lobby') return <GameLobby title="Quem Sou Eu?" gameType="who_am_i" error={room.error} onCreateRoom={room.createRoom} onBack={onBack} />
   if (room.screen === 'waiting') return <WaitingRoom roomId={room.roomId} onBack={onBack} />
 
   const isAssigner = state?.assigner === userId

@@ -92,13 +92,9 @@ export function TicTacToe({ userId, resumeRoomId, onBack, onGameChanged }: TicTa
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const createRoom = () => { setError(''); send({ action: 'create_room', game_type: 'tic_tac_toe' }) }
-
-  const joinRoom = (id: string) => {
-    const clean = id.trim().toUpperCase()
-    if (!clean) return
-    setError(''); setRoomId(clean)
-    send({ action: 'join', room_id: clean })
+  const createRoom = (opts?: { roomName?: string; maxPlayers?: number }) => {
+    setError('')
+    send({ action: 'create_room', game_type: 'tic_tac_toe', room_name: opts?.roomName ?? '', max_players: opts?.maxPlayers ?? 0 })
   }
 
   const makeMove = (index: number) => {
@@ -125,7 +121,6 @@ export function TicTacToe({ userId, resumeRoomId, onBack, onGameChanged }: TicTa
     return (
       <GameLobby title="Jogo da Velha" gameType="tic_tac_toe" error={error}
         onCreateRoom={createRoom}
-        onJoinRoom={joinRoom}
         onBack={onBack} />
     )
   }

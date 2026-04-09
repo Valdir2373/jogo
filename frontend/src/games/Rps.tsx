@@ -31,7 +31,7 @@ export function Rps({ userId, resumeRoomId, onBack, onGameChanged }: Props) {
   const onState = useCallback((s: Record<string, unknown>) => setState(s as unknown as RpsState), [])
   const room = useGameRoom({ userId, gameType: 'rps', resumeRoomId, onBack, onGameChanged, onState })
 
-  if (room.screen === 'lobby') return <GameLobby title="Pedra Papel Tesoura" gameType="rps" error={room.error} onCreateRoom={() => room.createRoom()} onJoinRoom={room.joinRoom} onBack={onBack} />
+  if (room.screen === 'lobby') return <GameLobby title="Pedra Papel Tesoura" gameType="rps" error={room.error} onCreateRoom={room.createRoom} onBack={onBack} />
   if (room.screen === 'waiting') return <WaitingRoom roomId={room.roomId} onBack={onBack} />
 
   const iVoted    = state?.restart_votes.includes(userId) ?? false

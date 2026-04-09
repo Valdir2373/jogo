@@ -30,7 +30,7 @@ export function GuessNumber({ userId, resumeRoomId, onBack, onGameChanged }: Pro
   const onState = useCallback((s: Record<string, unknown>) => setState(s as unknown as GuessState), [])
   const room = useGameRoom({ userId, gameType: 'guess_number', resumeRoomId, onBack, onGameChanged, onState })
 
-  if (room.screen === 'lobby') return <GameLobby title="Adivinhe o Número" gameType="guess_number" error={room.error} onCreateRoom={() => room.createRoom()} onJoinRoom={room.joinRoom} onBack={onBack} />
+  if (room.screen === 'lobby') return <GameLobby title="Adivinhe o Número" gameType="guess_number" error={room.error} onCreateRoom={room.createRoom} onBack={onBack} />
   if (room.screen === 'waiting') return <WaitingRoom roomId={room.roomId} onBack={onBack} />
 
   const iVoted = state?.restart_votes.includes(userId) ?? false

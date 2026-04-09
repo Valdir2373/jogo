@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { Button } from './Button'
 import { Input } from './Input'
-import { GAMES } from '../GAMES'
+import { GAMES, findGame } from '../GAMES'
 
 interface GameLobbyProps {
   title: string
   gameType: string
   error: string
-  onCreateRoom: () => void
-  onJoinRoom: (id: string) => void
+  onCreateRoom: (opts?: { roomName?: string; maxPlayers?: number }) => void
   onBack: () => void
 }
 
@@ -28,30 +27,54 @@ interface GameHeaderProps {
   rightSlot?: React.ReactNode
 }
 
-// ── Lobby — apenas Criar sala e Entrar ────────────────────────────────────────
+// ── Lobby — Criar sala com personalização ─────────────────────────────────────
 
-export function GameLobby({ title, error, onCreateRoom, onJoinRoom, onBack }: GameLobbyProps) {
-  const [joinInput, setJoinInput] = useState('')
+export function GameLobby({ title, gameType, error, onCreateRoom, onBack }: GameLobbyProps) {
+  const [roomName,   setRoomName]   = useState('')
+  const [maxPlayers, setMaxPlayers] = useState(0)
+
+  const meta = findGame(gameType)
+
+  const handleCreate = () => {
+    onCreateRoom({
+      roomName:   roomName.trim() || undefined,
+      maxPlayers: maxPlayers || undefined,
+    })
+  }
 
   return (
     <div className="flex flex-col items-center gap-5 w-full max-w-sm">
       <h2 className="text-xl font-bold text-white">{title}</h2>
 
-      <Button className="w-full" onClick={onCreateRoom}>
-        Criar sala
-      </Button>
-
-      <div className="flex gap-2 w-full">
-        <Input
-          className="flex-1"
-          placeholder="Código da sala"
-          value={joinInput}
-          onChange={e => setJoinInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && onJoinRoom(joinInput)}
-          maxLength={6}
-        />
-        <Button variant="secondary" onClick={() => onJoinRoom(joinInput)}>Entrar</Button>
+      {/* Room name */}
+      <div className="w-full flex flex-col gap-1.5">
+        <label className="text-xs text-zinc-500 uppercase tracking-widest">Nome da sala (opcional)</label>
+        <Input placeholder="Ex: Sala da Veri..." value={roomName}
+          onChange={e => setRoomName(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleCreate()}
+          maxLength={30} />
       </div>
+
+      {/* Max players — only for variable-size games */}
+      {meta?.variable && meta.maxPlayers > meta.minPlayers && (
+        <div className="w-full flex flex-col gap-1.5">
+          <label className="text-xs text-zinc-500 uppercase tracking-widest">Máx. jogadores</label>
+          <div className="flex gap-2 flex-wrap">
+            <button onClick={() => setMaxPlayers(0)}
+              className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${maxPlayers === 0 ? 'border-pink-600 bg-pink-950 text-pink-300' : 'border-zinc-700 text-zinc-400 hover:border-zinc-500'}`}>
+              Padrão ({meta.maxPlayers})
+            </button>
+            {Array.from({ length: meta.maxPlayers - meta.minPlayers }, (_, i) => meta.minPlayers + i).map(n => (
+              <button key={n} onClick={() => setMaxPlayers(n)}
+                className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${maxPlayers === n ? 'border-pink-600 bg-pink-950 text-pink-300' : 'border-zinc-700 text-zinc-400 hover:border-zinc-500'}`}>
+                {n}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <Button className="w-full" onClick={handleCreate}>Criar sala</Button>
 
       {error && <p className="text-red-400 text-sm">{error}</p>}
       <Button variant="ghost" onClick={onBack}>← Voltar</Button>

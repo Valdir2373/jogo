@@ -58,6 +58,8 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [settings,     setSettings]     = useState(loadSettings)
   const [nameInput,    setNameInput]    = useState(loadSettings().displayName)
+  const [joinCode,     setJoinCode]     = useState('')
+  const [joinError,    setJoinError]    = useState('')
 
   const theme = THEMES.find(t => t.id === settings.themeId) ?? THEMES[0]
 
@@ -74,6 +76,21 @@ export default function App() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const enterGame = (gameType: string, roomId?: string) => setActive({ gameType, roomId: roomId ?? '' })
+
+  const handleJoinByCode = async () => {
+    const code = joinCode.trim().toUpperCase()
+    if (!code) return
+    setJoinError('')
+    try {
+      const r = await fetch(`/api/room/${encodeURIComponent(code)}`)
+      if (!r.ok) { setJoinError('Sala não encontrada.'); return }
+      const data = await r.json()
+      setJoinCode('')
+      enterGame(data.game_type, code)
+    } catch {
+      setJoinError('Erro ao buscar sala.')
+    }
+  }
   const backToMenu = () => { setActive(null); fetchRooms() }
   const handleGameChanged = (roomId: string, gameType: string) => setActive({ gameType, roomId })
 
@@ -180,6 +197,26 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {/* Join by code */}
+        <div className="w-full">
+          <p className="text-xs text-zinc-500 uppercase tracking-widest mb-2">🔍 Achar sala</p>
+          <div className="flex gap-2">
+            <input
+              value={joinCode}
+              onChange={e => { setJoinCode(e.target.value.toUpperCase()); setJoinError('') }}
+              onKeyDown={e => e.key === 'Enter' && handleJoinByCode()}
+              placeholder="Código da sala"
+              maxLength={6}
+              className="flex-1 bg-zinc-900 border border-zinc-700 focus:border-pink-600 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none font-mono uppercase tracking-widest"
+            />
+            <button onClick={handleJoinByCode}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-all ${theme.accent} bg-zinc-900 ${theme.border} hover:bg-zinc-800`}>
+              Entrar
+            </button>
+          </div>
+          {joinError && <p className="text-red-400 text-xs mt-1">{joinError}</p>}
+        </div>
 
         {/* Game list */}
         <div className="w-full">

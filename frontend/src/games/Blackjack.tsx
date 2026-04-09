@@ -46,7 +46,7 @@ export function Blackjack({ userId, resumeRoomId, onBack, onGameChanged }: Props
   const onState = useCallback((s: Record<string, unknown>) => setState(s as unknown as BJState), [])
   const room = useGameRoom({ userId, gameType: 'blackjack', resumeRoomId, onBack, onGameChanged, onState })
 
-  if (room.screen === 'lobby') return <GameLobby title="Blackjack" gameType="blackjack" error={room.error} onCreateRoom={() => room.createRoom()} onJoinRoom={room.joinRoom} onBack={onBack} />
+  if (room.screen === 'lobby') return <GameLobby title="Blackjack" gameType="blackjack" error={room.error} onCreateRoom={room.createRoom} onBack={onBack} />
   if (room.screen === 'waiting') return <WaitingRoom roomId={room.roomId} onBack={onBack} />
 
   const iVoted    = state?.restart_votes.includes(userId) ?? false

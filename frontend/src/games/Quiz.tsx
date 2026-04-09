@@ -44,7 +44,7 @@ export function Quiz({ userId, resumeRoomId, onBack, onGameChanged }: Props) {
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [state?.phase, state?.question_index])
 
-  if (room.screen === 'lobby') return <GameLobby title="Quiz Relâmpago" gameType="quiz" error={room.error} onCreateRoom={() => room.createRoom()} onJoinRoom={room.joinRoom} onBack={onBack} />
+  if (room.screen === 'lobby') return <GameLobby title="Quiz Relâmpago" gameType="quiz" error={room.error} onCreateRoom={room.createRoom} onBack={onBack} />
   if (room.screen === 'waiting') return <WaitingRoom roomId={room.roomId} onBack={onBack} />
 
   const iVoted    = state?.restart_votes.includes(userId) ?? false

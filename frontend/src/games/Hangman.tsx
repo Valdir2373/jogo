@@ -107,12 +107,9 @@ export function Hangman({ userId, resumeRoomId, onBack, onGameChanged }: Hangman
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const createRoom = () => { setError(''); send({ action: 'create_room', game_type: 'hangman' }) }
-  const joinRoom   = (id: string) => {
-    const clean = id.trim().toUpperCase()
-    if (!clean) return
-    setError(''); setRoomId(clean)
-    send({ action: 'join', room_id: clean })
+  const createRoom = (opts?: { roomName?: string; maxPlayers?: number }) => {
+    setError('')
+    send({ action: 'create_room', game_type: 'hangman', room_name: opts?.roomName ?? '', max_players: opts?.maxPlayers ?? 0 })
   }
 
   const submitWord = () => {
@@ -142,7 +139,6 @@ export function Hangman({ userId, resumeRoomId, onBack, onGameChanged }: Hangman
     return (
       <GameLobby title="Forca" gameType="hangman" error={error}
         onCreateRoom={createRoom}
-        onJoinRoom={joinRoom}
         onBack={onBack} />
     )
   }

@@ -28,6 +28,15 @@ get '/health' do
   'ok'
 end
 
+get '/api/room/:id' do
+  rid  = params[:id].to_s.upcase.slice(0, 16)
+  room = ENGINE.get_room(rid)
+  halt 404, JSON.generate({ error: 'room not found' }) unless room
+  content_type :json
+  info = GameEngine::GAMES[room[:type]]
+  JSON.generate({ game_type: room[:type], game_name: info&.dig(:name) })
+end
+
 get '/api/rooms' do
   user_id = request.params['user_id'].to_s
   halt 400, 'invalid user_id' unless user_id.match?(VALID_UID)
