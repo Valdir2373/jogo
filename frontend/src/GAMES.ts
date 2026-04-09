@@ -1,3 +1,5 @@
+export const PERSON_NAME = 'Veronica'
+
 export interface GameMeta {
   type: string
   name: string

@@ -47,7 +47,7 @@ export function WordChain({ userId, resumeRoomId, onBack, onGameChanged }: Props
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [state?.current_player, state?.phase])
 
-  if (room.screen === 'lobby') return <GameLobby title="Palavras Encadeadas" gameType="word_chain" error={room.error} onCreateRoom={room.createRoom} onJoinRoom={room.joinRoom} onBack={onBack} />
+  if (room.screen === 'lobby') return <GameLobby title="Palavras Encadeadas" gameType="word_chain" error={room.error} onCreateRoom={() => room.createRoom()} onJoinRoom={room.joinRoom} onBack={onBack} />
   if (room.screen === 'waiting') return <WaitingRoom roomId={room.roomId} onBack={onBack} />
 
   const isMyTurn  = state?.current_player === userId

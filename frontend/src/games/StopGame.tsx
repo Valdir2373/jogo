@@ -59,7 +59,7 @@ export function StopGame({ userId, resumeRoomId, onBack, onGameChanged }: Props)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [state?.phase, stopped]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (room.screen === 'lobby') return <GameLobby title="Stop" gameType="stop_game" error={room.error} onCreateRoom={room.createRoom} onJoinRoom={room.joinRoom} onBack={onBack} />
+  if (room.screen === 'lobby') return <GameLobby title="Stop" gameType="stop_game" error={room.error} onCreateRoom={() => room.createRoom()} onJoinRoom={room.joinRoom} onBack={onBack} />
   if (room.screen === 'waiting') return <WaitingRoom roomId={room.roomId} onBack={onBack} />
 
   const hasSubmitted = state?.submitted_ids.includes(userId) ?? false

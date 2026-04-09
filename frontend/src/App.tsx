@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getUserId } from './userId'
-import { GAMES } from './GAMES'
+import { GAMES, PERSON_NAME } from './GAMES'
 import { TicTacToe }   from './games/TicTacToe'
 import { Hangman }     from './games/Hangman'
 import { GuessNumber } from './games/GuessNumber'
@@ -68,7 +68,10 @@ export default function App() {
       .catch(() => {})
   }
 
-  useEffect(() => { fetchRooms() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    fetchRooms()
+    document.title = `Jogos ${PERSON_NAME} 💕`
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const enterGame = (gameType: string, roomId?: string) => setActive({ gameType, roomId: roomId ?? '' })
   const backToMenu = () => { setActive(null); fetchRooms() }
@@ -118,7 +121,7 @@ export default function App() {
         <div className="flex justify-between items-center w-full">
           <div />
           <p className={`${theme.accent} text-sm text-center`}>
-            Jogos feitos com amor, só pra você, Veronica 💕
+            Jogos feitos com amor, só pra você, {PERSON_NAME} 💕
           </p>
           <button onClick={() => { setNameInput(settings.displayName); setShowSettings(v => !v) }}
             className="text-zinc-500 hover:text-zinc-300 transition-colors text-lg">⚙</button>

@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Button } from './Button'
 import { Input } from './Input'
-import { GAMES, findGame } from '../GAMES'
+import { GAMES } from '../GAMES'
 
 interface GameLobbyProps {
   title: string
   gameType: string
   error: string
-  onCreateRoom: (opts: { roomName: string; maxPlayers: number }) => void
+  onCreateRoom: () => void
   onJoinRoom: (id: string) => void
   onBack: () => void
 }
@@ -28,58 +28,19 @@ interface GameHeaderProps {
   rightSlot?: React.ReactNode
 }
 
-// ── Lobby ────────────────────────────────────────────────────────────────────
+// ── Lobby — apenas Criar sala e Entrar ────────────────────────────────────────
 
-export function GameLobby({ title, gameType, error, onCreateRoom, onJoinRoom, onBack }: GameLobbyProps) {
-  const [joinInput, setJoinInput]   = useState('')
-  const [roomName,  setRoomName]    = useState('')
-  const [maxP,      setMaxP]        = useState(0)
-  const [showOpts,  setShowOpts]    = useState(false)
-  const meta = findGame(gameType)
+export function GameLobby({ title, error, onCreateRoom, onJoinRoom, onBack }: GameLobbyProps) {
+  const [joinInput, setJoinInput] = useState('')
 
   return (
     <div className="flex flex-col items-center gap-5 w-full max-w-sm">
       <h2 className="text-xl font-bold text-white">{title}</h2>
 
-      {/* Create room */}
-      <div className="w-full flex flex-col gap-2">
-        {showOpts && (
-          <>
-            <Input
-              placeholder="Nome da sala (opcional)"
-              value={roomName}
-              onChange={e => setRoomName(e.target.value)}
-              maxLength={30}
-            />
-            {meta?.variable && (
-              <select
-                value={maxP || ''}
-                onChange={e => setMaxP(Number(e.target.value))}
-                className="w-full bg-zinc-900 border border-zinc-700 text-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-pink-600"
-              >
-                <option value="">Limite padrão ({meta.maxPlayers} jogadores)</option>
-                {Array.from({ length: meta.maxPlayers - meta.minPlayers + 1 }, (_, i) => meta.minPlayers + i)
-                  .map(n => <option key={n} value={n}>{n} jogadores</option>)
-                }
-              </select>
-            )}
-          </>
-        )}
-        <div className="flex gap-2">
-          <Button className="flex-1" onClick={() => onCreateRoom({ roomName, maxPlayers: maxP })}>
-            Criar sala
-          </Button>
-          <button
-            onClick={() => setShowOpts(v => !v)}
-            className="px-3 py-2 bg-zinc-900 border border-zinc-700 hover:border-pink-700 rounded-lg text-zinc-400 text-sm transition-colors"
-            title="Opções"
-          >
-            ⚙
-          </button>
-        </div>
-      </div>
+      <Button className="w-full" onClick={onCreateRoom}>
+        Criar sala
+      </Button>
 
-      {/* Join room */}
       <div className="flex gap-2 w-full">
         <Input
           className="flex-1"
@@ -128,7 +89,7 @@ export function WaitingRoom({ roomId, onBack }: WaitingProps) {
   )
 }
 
-// ── Game Header (top bar with back, room code, game picker, status dot) ──────
+// ── Game Header ───────────────────────────────────────────────────────────────
 
 export function GameHeader({ roomId, gameName, opponentOnline, gameVotes, myUserId, onVoteGame, onBack, rightSlot }: GameHeaderProps) {
   const [showPicker, setShowPicker] = useState(false)
@@ -139,24 +100,32 @@ export function GameHeader({ roomId, gameName, opponentOnline, gameVotes, myUser
     <div className="w-full flex flex-col gap-2">
       <div className="flex justify-between items-center w-full">
         <Button variant="ghost" onClick={onBack} className="text-sm px-3 py-1.5">←</Button>
+
         <div className="flex flex-col items-center gap-0.5">
           <span className="font-mono text-xs text-zinc-600">{roomId}</span>
-          <button
-            onClick={() => setShowPicker(v => !v)}
-            className="text-xs text-zinc-500 hover:text-pink-400 transition-colors"
-          >
-            {gameName} ↕
-          </button>
+          <span className="text-xs text-zinc-500">{gameName}</span>
         </div>
+
         <div className="flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full ${opponentOnline ? 'bg-green-500' : 'bg-red-500'}`} />
+          <button
+            onClick={() => setShowPicker(v => !v)}
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-zinc-900 border border-zinc-700 hover:border-pink-600 rounded-lg text-xs text-zinc-400 hover:text-pink-300 transition-all"
+            title="Achar sala / trocar jogo"
+          >
+            🔍 <span className="hidden sm:inline">Achar sala</span>
+          </button>
           {rightSlot}
         </div>
       </div>
 
+      {/* Game picker overlay */}
       {showPicker && (
         <div className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-col gap-1.5">
-          <p className="text-xs text-zinc-500 mb-1">Propor troca (ambos devem concordar):</p>
+          <div className="flex justify-between items-center mb-1">
+            <p className="text-xs text-zinc-500">Propor troca de jogo (ambos concordam):</p>
+            <button onClick={() => setShowPicker(false)} className="text-zinc-600 hover:text-zinc-400 text-xs">✕</button>
+          </div>
           {GAMES.map(g => {
             const iV = myVote === g.type
             const tV = theirVote === g.type
@@ -177,7 +146,7 @@ export function GameHeader({ roomId, gameName, opponentOnline, gameVotes, myUser
             )
           })}
           {myVote && !theirVote && (
-            <p className="text-xs text-zinc-500 text-center pt-1 animate-pulse">Aguardando concordar...</p>
+            <p className="text-xs text-zinc-500 text-center pt-1 animate-pulse">Aguardando o outro concordar...</p>
           )}
           {theirVote && !myVote && (
             <p className="text-xs text-pink-400 text-center pt-1 animate-pulse">

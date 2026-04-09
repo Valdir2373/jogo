@@ -27,7 +27,7 @@ export function MemoryGame({ userId, resumeRoomId, onBack, onGameChanged }: Prop
   const onState = useCallback((s: Record<string, unknown>) => setState(s as unknown as MemState), [])
   const room = useGameRoom({ userId, gameType: 'memory_game', resumeRoomId, onBack, onGameChanged, onState })
 
-  if (room.screen === 'lobby') return <GameLobby title="Jogo da Memória" gameType="memory_game" error={room.error} onCreateRoom={room.createRoom} onJoinRoom={room.joinRoom} onBack={onBack} />
+  if (room.screen === 'lobby') return <GameLobby title="Jogo da Memória" gameType="memory_game" error={room.error} onCreateRoom={() => room.createRoom()} onJoinRoom={room.joinRoom} onBack={onBack} />
   if (room.screen === 'waiting') return <WaitingRoom roomId={room.roomId} onBack={onBack} />
 
   const iVoted    = state?.restart_votes.includes(userId) ?? false
