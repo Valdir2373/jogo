@@ -107,6 +107,9 @@ get '/ws' do
         send_to_user(user_id, 'private_message', msg_payload)
         send_to_user(result[:recipient_id], 'private_message', msg_payload)
         next
+      elsif result[:invite_route]
+        send_to_user(result[:recipient_id], 'invite_received', result[:payload])
+        next
       elsif result[:event] == 'room_created'
         current_room_id = result[:payload][:room_id]
         CONN_MUTEX.synchronize do

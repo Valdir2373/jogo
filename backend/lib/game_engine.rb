@@ -62,6 +62,30 @@ class GameEngine
     end
   end
 
+  def invite_action(user_id, data)
+    room_id    = data['room_id'].to_s
+    invitee_id = data['invitee_id'].to_s
+
+    room = @mutex.synchronize { @rooms[room_id] }
+    return { error: 'room not found' } unless room
+
+    sender_name = @mutex.synchronize { @online_users[user_id] } || "Jogador #{user_id[0..3]}"
+    game_type   = room[:type]
+    game_name   = GAMES[game_type]&.dig(:name) || game_type
+
+    {
+      invite_route: true,
+      recipient_id: invitee_id,
+      payload: {
+        sender_id:   user_id,
+        sender_name: sender_name,
+        game_type:   game_type,
+        game_name:   game_name,
+        room_id:     room_id
+      }
+    }
+  end
+
   def set_broadcaster(&block)
     @broadcaster = block
   end
@@ -73,6 +97,7 @@ class GameEngine
              when 'send_chat'    then send_chat_action(user_id, data)
              when 'announce'     then announce_presence(user_id, data)
              when 'send_private' then send_private_action(user_id, data)
+             when 'invite'       then invite_action(user_id, data)
              when 'join', 'move', 'restart_vote',
                   'set_word', 'guess',
                   'set_number', 'guess',

@@ -6,6 +6,8 @@ let globalWs: WebSocket | null = null
 const listeners = new Set<MessageHandler>()
 const pendingMessages: Record<string, unknown>[] = []
 
+export let lastOnlineUsers: { user_id: string; name: string }[] = []
+
 export function sendSharedMessage(payload: Record<string, unknown>, userId: string) {
   const ws = globalWs || getSharedWebSocket(userId)
   if (ws && ws.readyState === WebSocket.OPEN) {
@@ -34,13 +36,18 @@ function getSharedWebSocket(userId: string): WebSocket {
     try {
       const data = JSON.parse(event.data)
       
+      if (data.event === 'online_users') {
+        lastOnlineUsers = data.payload.users || []
+      }
+
       // Dispatch global events for app-level handlers
       if (
         data.event === 'chat_message' ||
         data.event === 'chat_history' ||
         data.event === 'online_users' ||
         data.event === 'private_message' ||
-        data.event === 'private_history'
+        data.event === 'private_history' ||
+        data.event === 'invite_received'
       ) {
         window.dispatchEvent(new CustomEvent('app-global-event', { detail: data }))
       }

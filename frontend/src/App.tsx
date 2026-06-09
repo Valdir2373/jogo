@@ -41,6 +41,14 @@ interface PrivateMessage {
   timestamp: number
 }
 
+interface IncomingInvite {
+  sender_id: string
+  sender_name: string
+  game_type: string
+  game_name: string
+  room_id: string
+}
+
 function decodeHTML(html: string) {
   const txt = document.createElement('textarea')
   txt.innerHTML = html
@@ -106,6 +114,7 @@ export default function App() {
   const [privateInputText, setPrivateInputText] = useState('')
   const [unreadSenders, setUnreadSenders] = useState<string[]>([])
   const privateEndRef = useRef<HTMLDivElement | null>(null)
+  const [incomingInvite, setIncomingInvite] = useState<IncomingInvite | null>(null)
 
   const theme = THEMES.find(t => t.id === settings.themeId) ?? THEMES[0]
 
@@ -150,6 +159,8 @@ export default function App() {
             setUnreadSenders(prev => prev.includes(msg.sender_id) ? prev : [...prev, msg.sender_id])
           }
         }
+      } else if (data.event === 'invite_received') {
+        setIncomingInvite(data.payload as IncomingInvite)
       }
     }
 
@@ -542,6 +553,40 @@ export default function App() {
           </div>
         )}
       </div>
+
+      {incomingInvite && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-950 border border-primary-border rounded-2xl shadow-2xl max-w-xs w-full p-5 flex flex-col gap-4 text-center">
+            <span className="text-3xl">🎮</span>
+            <div>
+              <p className="text-white font-bold text-sm">
+                {decodeHTML(incomingInvite.sender_name)} te convidou pra jogar:
+              </p>
+              <p className="text-primary font-extrabold text-lg mt-1">
+                {incomingInvite.game_name}
+              </p>
+            </div>
+            <div className="flex gap-2.5">
+              <button
+                onClick={() => setIncomingInvite(null)}
+                className="flex-1 py-2 rounded-xl text-xs font-bold border border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 transition-colors"
+              >
+                Recusar
+              </button>
+              <button
+                onClick={() => {
+                  const invite = incomingInvite
+                  setIncomingInvite(null)
+                  enterGame(invite.game_type, invite.room_id)
+                }}
+                className="flex-1 py-2 rounded-xl text-xs font-bold bg-primary text-white hover:opacity-90 transition-opacity shadow-lg shadow-primary-border/20"
+              >
+                Aceitar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   )
 }

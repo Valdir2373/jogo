@@ -1,7 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from './Button'
 import { Input } from './Input'
 import { GAMES, findGame } from '../GAMES'
+import { getUserId } from '../userId'
+import { lastOnlineUsers } from '../useWebSocket'
+
+function decodeHTML(html: string) {
+  const txt = document.createElement('textarea')
+  txt.innerHTML = html
+  return txt.value
+}
 
 interface GameLobbyProps {
   title: string
@@ -86,6 +94,22 @@ export function GameLobby({ title, gameType, error, onCreateRoom, onBack }: Game
 
 export function WaitingRoom({ roomId, onBack }: WaitingProps) {
   const [copied, setCopied] = useState(false)
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [onlineUsers, setOnlineUsers] = useState<{ user_id: string; name: string }[]>(() => lastOnlineUsers)
+  const [invitedUsers, setInvitedUsers] = useState<string[]>([])
+
+  const myUserId = getUserId()
+
+  useEffect(() => {
+    const handleGlobal = (e: Event) => {
+      const data = (e as CustomEvent).detail
+      if (data.event === 'online_users') {
+        setOnlineUsers(data.payload.users || [])
+      }
+    }
+    window.addEventListener('app-global-event', handleGlobal)
+    return () => window.removeEventListener('app-global-event', handleGlobal)
+  }, [])
 
   const copyRoomId = async () => {
     try { await navigator.clipboard.writeText(roomId) } catch {
@@ -96,18 +120,74 @@ export function WaitingRoom({ roomId, onBack }: WaitingProps) {
     setCopied(true); setTimeout(() => setCopied(false), 2000)
   }
 
+  const handleSendInvite = (targetUserId: string) => {
+    window.dispatchEvent(new CustomEvent('app-send-chat', {
+      detail: {
+        action: 'invite',
+        room_id: roomId,
+        invitee_id: targetUserId,
+      }
+    }))
+    setInvitedUsers(prev => [...prev, targetUserId])
+  }
+
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-sm text-center">
       <h2 className="text-xl font-bold text-white">Sala criada</h2>
       <p className="text-zinc-500 text-sm">Compartilhe o código:</p>
       <div className="flex items-center gap-3 bg-zinc-900 border border-zinc-800 rounded-xl px-6 py-4">
         <span className="text-3xl font-mono font-bold tracking-widest text-primary">{roomId}</span>
-        <button onClick={copyRoomId} className="text-zinc-500 hover:text-primary transition-colors ml-1">
-          {copied ? '✓' : '⎘'}
-        </button>
+        <div className="flex gap-2">
+          <button onClick={copyRoomId} className="text-zinc-500 hover:text-primary transition-colors" title="Copiar código">
+            {copied ? '✓' : '⎘'}
+          </button>
+          <button onClick={() => setShowInviteModal(true)} className="text-zinc-500 hover:text-primary transition-colors text-lg" title="Convidar jogador">
+            👤➕
+          </button>
+        </div>
       </div>
       <p className="text-zinc-600 text-sm animate-pulse">Aguardando o outro jogador...</p>
       <Button variant="ghost" onClick={onBack}>← Cancelar</Button>
+
+      {showInviteModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 flex flex-col gap-4 text-left">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm text-white">Convidar Jogador</h3>
+              <button onClick={() => setShowInviteModal(false)} className="text-zinc-500 hover:text-zinc-300 text-sm">✕</button>
+            </div>
+            
+            <div className="max-h-60 overflow-y-auto flex flex-col gap-2 scrollbar-thin scrollbar-thumb-zinc-800">
+              {onlineUsers.filter(u => u.user_id !== myUserId).map(user => {
+                const isSent = invitedUsers.includes(user.user_id)
+                return (
+                  <div key={user.user_id} className="flex justify-between items-center bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2">
+                    <span className="text-sm font-medium text-white truncate max-w-[180px]">
+                      {decodeHTML(user.name)}
+                    </span>
+                    <button
+                      onClick={() => handleSendInvite(user.user_id)}
+                      disabled={isSent}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                        isSent
+                          ? 'border-zinc-800 bg-zinc-950 text-zinc-600 cursor-default'
+                          : 'border-primary bg-primary text-white hover:opacity-90'
+                      }`}
+                    >
+                      {isSent ? 'Enviado ✓' : 'Convidar'}
+                    </button>
+                  </div>
+                )
+              })}
+              {onlineUsers.filter(u => u.user_id !== myUserId).length === 0 && (
+                <div className="text-center py-6 text-zinc-500 text-xs">
+                  Ninguém online no momento.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
