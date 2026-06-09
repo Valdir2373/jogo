@@ -36,18 +36,21 @@ const THEMES = [
   { id: 'purple', label: 'Roxo',   bg: 'bg-zinc-950',    accent: 'text-purple-400', border: 'border-purple-700', dot: 'bg-purple-500' },
   { id: 'green',  label: 'Verde',  bg: 'bg-zinc-950',    accent: 'text-emerald-400',border: 'border-emerald-700',dot: 'bg-emerald-500'},
   { id: 'orange', label: 'Laranja',bg: 'bg-zinc-950',    accent: 'text-orange-400', border: 'border-orange-700', dot: 'bg-orange-500' },
+  { id: 'custom', label: 'Personalizado', bg: 'bg-black', accent: 'text-primary-accent', border: 'border-primary-border', dot: 'bg-primary' },
 ]
 
 function loadSettings() {
   return {
     displayName: localStorage.getItem('display_name') ?? '',
     themeId:     localStorage.getItem('color_theme')  ?? 'pink',
+    customColor: localStorage.getItem('custom_color') ?? '#ec4899',
   }
 }
 
-function saveSettings(displayName: string, themeId: string) {
+function saveSettings(displayName: string, themeId: string, customColor: string) {
   localStorage.setItem('display_name', displayName)
   localStorage.setItem('color_theme',  themeId)
+  localStorage.setItem('custom_color', customColor)
 }
 
 // ── App ───────────────────────────────────────────────────────────────────────
@@ -58,6 +61,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [settings,     setSettings]     = useState(loadSettings)
   const [nameInput,    setNameInput]    = useState(loadSettings().displayName)
+  const [customColorInput, setCustomColorInput] = useState(loadSettings().customColor)
   const [joinCode,     setJoinCode]     = useState('')
   const [joinError,    setJoinError]    = useState('')
 
@@ -74,6 +78,31 @@ export default function App() {
     fetchRooms()
     document.title = `Jogos ${PERSON_NAME} 💕`
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const root = document.documentElement
+    const themeColors: Record<string, { main: string; accent: string; border: string; bg: string }> = {
+      pink:   { main: '#ec4899', accent: '#f472b6', border: '#be185d', bg: '#500724' },
+      blue:   { main: '#3b82f6', accent: '#60a5fa', border: '#1d4ed8', bg: '#172554' },
+      purple: { main: '#a855f7', accent: '#c084fc', border: '#7e22ce', bg: '#3b0764' },
+      green:  { main: '#10b981', accent: '#34d399', border: '#047857', bg: '#022c22' },
+      orange: { main: '#f97316', accent: '#fb923c', border: '#c2410c', bg: '#431407' },
+    }
+
+    if (settings.themeId === 'custom') {
+      const color = settings.customColor
+      root.style.setProperty('--primary-color', color)
+      root.style.setProperty('--primary-accent', `color-mix(in srgb, ${color} 90%, white)`)
+      root.style.setProperty('--primary-border', `color-mix(in srgb, ${color} 70%, black)`)
+      root.style.setProperty('--primary-bg', `color-mix(in srgb, ${color} 15%, black)`)
+    } else {
+      const colors = themeColors[settings.themeId] || themeColors.pink
+      root.style.setProperty('--primary-color', colors.main)
+      root.style.setProperty('--primary-accent', colors.accent)
+      root.style.setProperty('--primary-border', colors.border)
+      root.style.setProperty('--primary-bg', colors.bg)
+    }
+  }, [settings.themeId, settings.customColor])
 
   const enterGame = (gameType: string, roomId?: string) => setActive({ gameType, roomId: roomId ?? '' })
 
@@ -95,9 +124,9 @@ export default function App() {
   const handleGameChanged = (roomId: string, gameType: string) => setActive({ gameType, roomId })
 
   const applySettings = () => {
-    const s = { displayName: nameInput, themeId: settings.themeId }
+    const s = { displayName: nameInput, themeId: settings.themeId, customColor: customColorInput }
     setSettings(s)
-    saveSettings(s.displayName, s.themeId)
+    saveSettings(s.displayName, s.themeId, s.customColor)
     setShowSettings(false)
   }
 
@@ -140,7 +169,7 @@ export default function App() {
           <p className={`${theme.accent} text-sm text-center`}>
             Jogos feitos com amor, só pra você, {PERSON_NAME} 💕
           </p>
-          <button onClick={() => { setNameInput(settings.displayName); setShowSettings(v => !v) }}
+          <button onClick={() => { setNameInput(settings.displayName); setCustomColorInput(settings.customColor); setShowSettings(v => !v) }}
             className="text-zinc-500 hover:text-zinc-300 transition-colors text-lg">⚙</button>
         </div>
 
@@ -152,18 +181,38 @@ export default function App() {
               <label className="text-xs text-zinc-500 uppercase tracking-widest block mb-1">Seu nome</label>
               <input value={nameInput} onChange={e => setNameInput(e.target.value)} maxLength={20}
                 placeholder="Como quer ser chamado?"
-                className="w-full bg-zinc-800 border border-zinc-700 focus:border-pink-600 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none" />
+                className="w-full bg-zinc-800 border border-zinc-700 focus:border-primary rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none" />
             </div>
             <div>
               <label className="text-xs text-zinc-500 uppercase tracking-widest block mb-2">Tema de cores</label>
-              <div className="flex gap-2 flex-wrap">
-                {THEMES.map(t => (
-                  <button key={t.id} onClick={() => setSettings(prev => ({ ...prev, themeId: t.id }))}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition-all ${settings.themeId === t.id ? 'border-zinc-400 text-white' : 'border-zinc-700 text-zinc-500 hover:border-zinc-500'}`}>
-                    <span className={`w-2.5 h-2.5 rounded-full ${t.dot}`} />
-                    {t.label}
-                  </button>
-                ))}
+              <div className="flex gap-2 flex-wrap items-center">
+                {THEMES.map(t => {
+                  if (t.id === 'custom') {
+                    return (
+                      <div key={t.id} className="flex items-center gap-2">
+                        <button onClick={() => setSettings(prev => ({ ...prev, themeId: t.id }))}
+                          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition-all ${settings.themeId === t.id ? 'border-zinc-400 text-white' : 'border-zinc-700 text-zinc-500 hover:border-zinc-500'}`}>
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: customColorInput }} />
+                          {t.label}
+                        </button>
+                        <input type="color" value={customColorInput}
+                          onChange={e => {
+                            setCustomColorInput(e.target.value)
+                            setSettings(prev => ({ ...prev, themeId: 'custom', customColor: e.target.value }))
+                          }}
+                          className="w-8 h-8 rounded cursor-pointer border border-zinc-700 bg-zinc-900 p-0"
+                          title="Escolher cor personalizada" />
+                      </div>
+                    )
+                  }
+                  return (
+                    <button key={t.id} onClick={() => setSettings(prev => ({ ...prev, themeId: t.id }))}
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition-all ${settings.themeId === t.id ? 'border-zinc-400 text-white' : 'border-zinc-700 text-zinc-500 hover:border-zinc-500'}`}>
+                      <span className={`w-2.5 h-2.5 rounded-full ${t.dot}`} />
+                      {t.label}
+                    </button>
+                  )
+                })}
               </div>
             </div>
             <button onClick={applySettings}
@@ -208,7 +257,7 @@ export default function App() {
               onKeyDown={e => e.key === 'Enter' && handleJoinByCode()}
               placeholder="Código da sala"
               maxLength={6}
-              className="flex-1 bg-zinc-900 border border-zinc-700 focus:border-pink-600 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none font-mono uppercase tracking-widest"
+              className="flex-1 bg-zinc-900 border border-zinc-700 focus:border-primary rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none font-mono uppercase tracking-widest"
             />
             <button onClick={handleJoinByCode}
               className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-all ${theme.accent} bg-zinc-900 ${theme.border} hover:bg-zinc-800`}>

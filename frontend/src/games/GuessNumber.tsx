@@ -62,7 +62,7 @@ export function GuessNumber({ userId, resumeRoomId, onBack, onGameChanged }: Pro
         {state?.players.map(p => (
           <div key={p} className="flex flex-col items-center">
             <span className="text-xs text-zinc-500">{p === userId ? 'você' : 'adversário'}</span>
-            <span className={`text-lg font-bold ${p === state.chooser ? 'text-pink-400' : 'text-white'}`}>
+            <span className={`text-lg font-bold ${p === state.chooser ? 'text-primary-accent' : 'text-white'}`}>
               {state.scores[p] ?? 0}pts {p === state.chooser ? '📝' : ''}
             </span>
           </div>
@@ -92,7 +92,7 @@ export function GuessNumber({ userId, resumeRoomId, onBack, onGameChanged }: Pro
         <div className="w-full flex flex-col gap-3">
           {state.hint && (
             <div className="text-center py-3">
-              <span className={`text-2xl font-bold ${state.hint === 'maior' ? 'text-green-400' : state.hint === 'menor' ? 'text-red-400' : 'text-pink-400'}`}>
+              <span className={`text-2xl font-bold ${state.hint === 'maior' ? 'text-green-400' : state.hint === 'menor' ? 'text-red-400' : 'text-primary-accent'}`}>
                 {state.hint === 'maior' ? '⬆ Maior!' : state.hint === 'menor' ? '⬇ Menor!' : state.hint}
               </span>
             </div>
@@ -126,7 +126,7 @@ export function GuessNumber({ userId, resumeRoomId, onBack, onGameChanged }: Pro
       {/* Won */}
       {state?.phase === 'won' && (
         <div className="text-center">
-          <p className="text-xl font-bold text-pink-400">
+          <p className="text-xl font-bold text-primary-accent">
             {state.winner === userId ? '🎉 Você acertou!' : '😅 Adversário acertou!'}
           </p>
           <RestartVoting iVoted={iVoted} theyVoted={theyVoted} onVote={room.voteRestart} />

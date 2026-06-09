@@ -144,7 +144,7 @@ export function WhoAmI({ userId, resumeRoomId, onBack, onGameChanged }: Props) {
       {/* Won */}
       {state?.phase === 'won' && (
         <div className="text-center">
-          <p className="text-xl font-bold text-pink-400">🎭 Todos adivinharam!</p>
+          <p className="text-xl font-bold text-primary-accent">🎭 Todos adivinharam!</p>
           <RestartVoting iVoted={iVoted} theyVoted={theyVoted} onVote={room.voteRestart} />
         </div>
       )}

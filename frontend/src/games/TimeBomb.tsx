@@ -99,7 +99,7 @@ export function TimeBomb({ userId, resumeRoomId, onBack, onGameChanged }: Props)
 
       {state?.phase === 'over' && (
         <div className="text-center">
-          <p className="text-xl font-bold text-pink-400">
+          <p className="text-xl font-bold text-primary-accent">
             {state.winner === userId ? '🎉 Você sobreviveu!' : '💥 Você explodiu!'}
           </p>
           <RestartVoting iVoted={iVoted} theyVoted={theyVoted} onVote={room.voteRestart} />

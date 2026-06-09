@@ -11,7 +11,7 @@ export function Input({ label, className = '', ...props }: InputProps) {
         <label className="text-sm font-medium text-zinc-400">{label}</label>
       )}
       <input
-        className={`px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 focus:border-pink-500 focus:outline-none text-white placeholder-zinc-600 transition-colors ${className}`}
+        className={`px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 focus:border-primary focus:outline-none text-white placeholder-zinc-600 transition-colors ${className}`}
         {...props}
       />
     </div>

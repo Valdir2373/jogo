@@ -81,7 +81,7 @@ export function Blackjack({ userId, resumeRoomId, onBack, onGameChanged }: Props
 
       {/* Players */}
       {state?.players.map(p => (
-        <div key={p} className={`w-full bg-zinc-900 border rounded-xl p-3 ${p === state.current_turn ? 'border-pink-700' : 'border-zinc-800'}`}>
+        <div key={p} className={`w-full bg-zinc-900 border rounded-xl p-3 ${p === state.current_turn ? 'border-primary-border' : 'border-zinc-800'}`}>
           <div className="flex justify-between items-center mb-2">
             <p className="text-sm font-semibold text-white">{p === userId ? 'você' : p.slice(0,8)}</p>
             <span className={`text-sm font-bold ${(state.player_values[p] ?? 0) > 21 ? 'text-red-400' : 'text-white'}`}>

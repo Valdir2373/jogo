@@ -89,7 +89,7 @@ export function LetterRace({ userId, resumeRoomId, onBack, onGameChanged }: Prop
         <>
           <div className="text-center">
             <p className="text-xs text-zinc-500">Rodada {state.round} · {state.category}</p>
-            <p className="text-5xl font-black text-pink-400">{state.letter}</p>
+            <p className="text-5xl font-black text-primary-accent">{state.letter}</p>
             <p className="text-xs text-zinc-600">Digite palavras que começam com essa letra</p>
           </div>
 
@@ -100,7 +100,7 @@ export function LetterRace({ userId, resumeRoomId, onBack, onGameChanged }: Prop
               <span className={timeLeft <= 10 ? 'text-red-400 font-bold' : ''}>{timeLeft}s</span>
             </div>
             <div className="w-full bg-zinc-800 rounded-full h-1.5">
-              <div className={`h-1.5 rounded-full transition-all ${timeLeft <= 10 ? 'bg-red-500' : 'bg-pink-500'}`}
+              <div className={`h-1.5 rounded-full transition-all ${timeLeft <= 10 ? 'bg-red-500' : 'bg-primary'}`}
                 style={{ width: `${(timeLeft / (state.time_limit)) * 100}%` }} />
             </div>
           </div>
@@ -112,14 +112,14 @@ export function LetterRace({ userId, resumeRoomId, onBack, onGameChanged }: Prop
                   <input key={i} value={val}
                     onChange={e => { const n = [...inputs]; n[i] = e.target.value; setInputs(n) }}
                     placeholder={`Palavra ${i + 1}`}
-                    className="bg-zinc-900 border border-zinc-700 focus:border-pink-600 rounded-lg px-2.5 py-1.5 text-sm text-white placeholder-zinc-600 outline-none"
+                    className="bg-zinc-900 border border-zinc-700 focus:border-primary rounded-lg px-2.5 py-1.5 text-sm text-white placeholder-zinc-600 outline-none"
                     maxLength={40} />
                 ))}
               </div>
               <Button onClick={submitWords} className="w-full">Stop! 🛑</Button>
             </>
           ) : (
-            <p className="text-pink-400 font-semibold animate-pulse">
+            <p className="text-primary-accent font-semibold animate-pulse">
               ✓ Enviado! Aguardando adversários...
             </p>
           )}
@@ -133,7 +133,7 @@ export function LetterRace({ userId, resumeRoomId, onBack, onGameChanged }: Prop
             <div key={p} className="bg-zinc-900 border border-zinc-800 rounded-xl p-3">
               <div className="flex justify-between mb-2">
                 <span className="font-semibold text-white">{p === userId ? 'você' : p.slice(0, 8)}</span>
-                <span className="text-pink-400 font-bold">+{r.points}pts</span>
+                <span className="text-primary-accent font-bold">+{r.points}pts</span>
               </div>
               <div className="flex flex-wrap gap-1">
                 {r.valid.map(w => <span key={w} className="text-xs bg-green-950 border border-green-800 text-green-300 rounded px-1.5 py-0.5">{w}</span>)}

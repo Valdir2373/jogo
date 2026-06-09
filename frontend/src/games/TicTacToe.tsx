@@ -139,12 +139,12 @@ export function TicTacToe({ userId, resumeRoomId, onBack, onGameChanged }: TicTa
         myUserId={userId}
         onVoteGame={voteGame}
         onBack={onBack}
-        rightSlot={<span className="text-sm font-bold text-pink-500">{mySymbol ?? '?'}</span>}
+        rightSlot={<span className="text-sm font-bold text-primary">{mySymbol ?? '?'}</span>}
       />
 
       <p className={`text-sm font-medium min-h-[1.25rem] ${
         !opponentOnline ? 'text-yellow-500'
-        : gameState?.winner === userId ? 'text-pink-400'
+        : gameState?.winner === userId ? 'text-primary-accent'
         : gameState?.winner ? 'text-zinc-400'
         : gameState?.draw   ? 'text-zinc-400'
         : isMyTurn ? 'text-white'
@@ -162,9 +162,9 @@ export function TicTacToe({ userId, resumeRoomId, onBack, onGameChanged }: TicTa
               className={[
                 'aspect-square rounded-xl text-3xl font-black flex items-center justify-center',
                 'transition-all duration-100 border focus:outline-none select-none',
-                isWinning ? 'bg-pink-950 border-pink-500' : 'bg-zinc-900 border-zinc-800',
-                clickable ? 'hover:border-pink-700 hover:bg-zinc-800 cursor-pointer' : 'cursor-default',
-                cell === 'X' ? 'text-pink-400' : 'text-white',
+                isWinning ? 'bg-primary-bg border-primary' : 'bg-zinc-900 border-zinc-800',
+                clickable ? 'hover:border-primary-border hover:bg-zinc-800 cursor-pointer' : 'cursor-default',
+                cell === 'X' || cell === 'O' ? 'text-primary-accent' : 'text-white',
               ].join(' ')}>
               {cell ?? ''}
             </button>

@@ -81,7 +81,7 @@ export function Quiz({ userId, resumeRoomId, onBack, onGameChanged }: Props) {
             {state.phase === 'question' && <span className={timeLeft <= 5 ? 'text-red-400 font-bold' : ''}>{timeLeft}s</span>}
           </div>
           <div className="w-full bg-zinc-800 rounded-full h-1.5">
-            <div className="bg-pink-500 h-1.5 rounded-full transition-all"
+            <div className="bg-primary h-1.5 rounded-full transition-all"
               style={{ width: `${((state.question_index) / state.total_questions) * 100}%` }} />
           </div>
         </div>
@@ -104,9 +104,9 @@ export function Quiz({ userId, resumeRoomId, onBack, onGameChanged }: Props) {
                     'w-full px-3 py-2.5 rounded-xl text-sm font-medium border transition-all',
                     isCorrect ? 'border-green-600 bg-green-950 text-green-300' :
                     isWrong   ? 'border-red-600 bg-red-950 text-red-300' :
-                    isMyAnswer ? 'border-pink-600 bg-pink-950 text-pink-300' :
+                    isMyAnswer ? 'border-primary bg-primary-bg text-primary-accent' :
                     answered ? 'border-zinc-700 text-zinc-500 cursor-default' :
-                    'border-zinc-700 hover:border-pink-600 text-zinc-300 cursor-pointer'
+                    'border-zinc-700 hover:border-primary text-zinc-300 cursor-pointer'
                   ].join(' ')}>
                   {opt}
                 </button>
@@ -130,12 +130,12 @@ export function Quiz({ userId, resumeRoomId, onBack, onGameChanged }: Props) {
       {/* Done */}
       {state?.phase === 'done' && (
         <div className="text-center w-full">
-          <p className="text-xl font-bold text-pink-400 mb-3">Quiz finalizado!</p>
+          <p className="text-xl font-bold text-primary-accent mb-3">Quiz finalizado!</p>
           <div className="flex flex-col gap-1 mb-4">
             {Object.entries(state.scores).sort(([,a],[,b]) => b-a).map(([p, sc]) => (
               <div key={p} className="flex justify-between bg-zinc-900 rounded-lg px-4 py-2">
                 <span className="text-white">{p === userId ? 'você' : p.slice(0,8)}</span>
-                <span className="font-bold text-pink-400">{sc}/{state.total_questions}</span>
+                <span className="font-bold text-primary-accent">{sc}/{state.total_questions}</span>
               </div>
             ))}
           </div>

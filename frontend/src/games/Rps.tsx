@@ -69,7 +69,7 @@ export function Rps({ userId, resumeRoomId, onBack, onGameChanged }: Props) {
               <div className="flex flex-wrap justify-center gap-2">
                 {(state?.choices ?? ['pedra', 'papel', 'tesoura', 'lagarto', 'spock']).map(c => (
                   <button key={c} onClick={() => pick(c)}
-                    className="flex flex-col items-center gap-1 bg-zinc-900 border border-zinc-700 hover:border-pink-600 rounded-xl px-4 py-3 transition-all">
+                    className="flex flex-col items-center gap-1 bg-zinc-900 border border-zinc-700 hover:border-primary rounded-xl px-4 py-3 transition-all">
                     <span className="text-2xl">{ICONS[c] ?? c}</span>
                     <span className="text-xs text-zinc-400 capitalize">{c}</span>
                   </button>
@@ -95,7 +95,7 @@ export function Rps({ userId, resumeRoomId, onBack, onGameChanged }: Props) {
               <div key={p} className="flex flex-col items-center gap-1">
                 <span className="text-3xl">{ICONS[lastResult.choices[p]] ?? lastResult.choices[p]}</span>
                 <span className="text-xs text-zinc-500">{p === userId ? 'você' : 'adversário'}</span>
-                {lastResult.winners.includes(p) && <span className="text-xs text-pink-400 font-bold">ganhou!</span>}
+                {lastResult.winners.includes(p) && <span className="text-xs text-primary-accent font-bold">ganhou!</span>}
               </div>
             ))}
           </div>

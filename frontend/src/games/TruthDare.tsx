@@ -47,7 +47,7 @@ export function TruthDare({ userId, resumeRoomId, onBack, onGameChanged }: Props
       {/* Turn indicator */}
       <div className="text-center">
         <p className="text-xs text-zinc-500">Vez de</p>
-        <p className="text-lg font-bold text-pink-400">
+        <p className="text-lg font-bold text-primary-accent">
           {state?.current_player === userId ? 'você' : state?.current_player?.slice(0,10)}
         </p>
       </div>
@@ -56,12 +56,12 @@ export function TruthDare({ userId, resumeRoomId, onBack, onGameChanged }: Props
       {state?.phase === 'choosing' && isCurrentPlayer && (
         <div className="flex gap-3 w-full">
           <button onClick={() => choose('verdade')}
-            className="flex-1 flex flex-col items-center gap-2 bg-zinc-900 border border-zinc-700 hover:border-pink-600 rounded-xl px-4 py-5 transition-all">
+            className="flex-1 flex flex-col items-center gap-2 bg-zinc-900 border border-zinc-700 hover:border-primary rounded-xl px-4 py-5 transition-all">
             <span className="text-3xl">🤫</span>
             <span className="font-semibold text-white">Verdade</span>
           </button>
           <button onClick={() => choose('desafio')}
-            className="flex-1 flex flex-col items-center gap-2 bg-zinc-900 border border-zinc-700 hover:border-pink-600 rounded-xl px-4 py-5 transition-all">
+            className="flex-1 flex flex-col items-center gap-2 bg-zinc-900 border border-zinc-700 hover:border-primary rounded-xl px-4 py-5 transition-all">
             <span className="text-3xl">🎯</span>
             <span className="font-semibold text-white">Desafio</span>
           </button>
@@ -85,13 +85,13 @@ export function TruthDare({ userId, resumeRoomId, onBack, onGameChanged }: Props
                 disabled={isCurrentPlayer || alreadyVoted}
                 className={[
                   'w-full text-left px-3 py-3 rounded-xl text-sm border transition-all',
-                  iVoted ? 'border-pink-600 bg-pink-950 text-white' :
+                  iVoted ? 'border-primary bg-primary-bg text-white' :
                   isCurrentPlayer || alreadyVoted ? 'border-zinc-800 text-zinc-500 cursor-default' :
-                  'border-zinc-700 hover:border-pink-600 text-zinc-300'
+                  'border-zinc-700 hover:border-primary text-zinc-300'
                 ].join(' ')}>
                 <div className="flex justify-between items-start gap-2">
                   <span>{opt}</span>
-                  {voteCount > 0 && <span className="text-pink-400 text-xs shrink-0">{voteCount}✓</span>}
+                  {voteCount > 0 && <span className="text-primary-accent text-xs shrink-0">{voteCount}✓</span>}
                 </div>
               </button>
             )
@@ -104,7 +104,7 @@ export function TruthDare({ userId, resumeRoomId, onBack, onGameChanged }: Props
       {/* Confirming — current player confirms they did it */}
       {state?.phase === 'confirming' && (
         <div className="w-full flex flex-col gap-3">
-          <div className="bg-zinc-900 border border-pink-800 rounded-xl p-4 text-center">
+          <div className="bg-zinc-900 border border-primary-border rounded-xl p-4 text-center">
             <p className="text-xs text-zinc-500 mb-1">{state.current_type === 'verdade' ? '🤫 Verdade escolhida' : '🎯 Desafio escolhido'}</p>
             <p className="text-white font-semibold">{chosenText}</p>
           </div>

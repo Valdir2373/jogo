@@ -73,9 +73,9 @@ export function MemoryGame({ userId, resumeRoomId, onBack, onGameChanged }: Prop
               <button key={i} onClick={() => flip(i)} disabled={!clickable}
                 className={[
                   'aspect-square rounded-lg flex items-center justify-center text-xl transition-all border',
-                  matched ? 'bg-pink-950 border-pink-700 cursor-default' :
-                  visible ? 'bg-zinc-800 border-zinc-600' :
-                  clickable ? 'bg-zinc-900 border-zinc-700 hover:border-pink-600 cursor-pointer' :
+                  matched ? 'bg-primary-bg border-primary-border cursor-default' :
+                  visible ? 'bg-zinc-800 border-zinc-500' :
+                  clickable ? 'bg-zinc-900 border-zinc-700 hover:border-primary cursor-pointer' :
                   'bg-zinc-900 border-zinc-800 cursor-default'
                 ].join(' ')}>
                 {visible ? (card.emoji ?? '?') : ''}
@@ -87,7 +87,7 @@ export function MemoryGame({ userId, resumeRoomId, onBack, onGameChanged }: Prop
 
       {state?.phase === 'won' && (
         <div className="text-center">
-          <p className="text-pink-400 font-bold text-lg">Fim de jogo!</p>
+          <p className="text-primary-accent font-bold text-lg">Fim de jogo!</p>
           <p className="text-zinc-400 text-sm">
             {Object.entries(state.scores).sort(([,a],[,b]) => b-a)[0]?.[0] === userId ? 'Você venceu!' : 'Adversário venceu!'}
           </p>
