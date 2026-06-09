@@ -70,7 +70,7 @@ export function useWebSocket(userId: string, onMessage: MessageHandler) {
   onMessageRef.current = onMessage
 
   useEffect(() => {
-    const ws = getSharedWebSocket(userId)
+    getSharedWebSocket(userId)
 
     const listener = (data: Record<string, unknown>) => {
       onMessageRef.current(data)
