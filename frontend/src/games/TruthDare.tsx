@@ -47,7 +47,7 @@ export function TruthDare({ userId, resumeRoomId, onBack, onGameChanged }: Props
       {/* Turn indicator */}
       <div className="text-center">
         <p className="text-xs text-zinc-500">Vez de</p>
-        <p className="text-lg font-bold text-primary-accent">
+        <p className="text-lg font-bold text-primary">
           {state?.current_player === userId ? 'você' : state?.current_player?.slice(0,10)}
         </p>
       </div>
@@ -91,7 +91,7 @@ export function TruthDare({ userId, resumeRoomId, onBack, onGameChanged }: Props
                 ].join(' ')}>
                 <div className="flex justify-between items-start gap-2">
                   <span>{opt}</span>
-                  {voteCount > 0 && <span className="text-primary-accent text-xs shrink-0">{voteCount}✓</span>}
+                  {voteCount > 0 && <span className="text-primary text-xs shrink-0">{voteCount}✓</span>}
                 </div>
               </button>
             )

@@ -66,6 +66,11 @@ get '/ws' do
     return ws.rack_response
   end
 
+  CONN_MUTEX.synchronize do
+    WS_USER[ws]      = user_id
+    USER_WS[user_id] = ws
+  end
+
   current_room_id = nil
 
   ws.on :message do |event|
@@ -91,12 +96,21 @@ get '/ws' do
 
       result = ENGINE.process_event(user_id, data)
 
-      if result[:event] == 'room_created'
+      if result[:event] == 'presence_announced'
+        ws.send(json_event(result[:event], result[:payload]))
+        pms = ENGINE.get_private_history(user_id)
+        ws.send(json_event('private_history', { messages: pms }))
+        broadcast_online_users
+        next
+      elsif result[:private_pm]
+        msg_payload = result[:msg]
+        send_to_user(user_id, 'private_message', msg_payload)
+        send_to_user(result[:recipient_id], 'private_message', msg_payload)
+        next
+      elsif result[:event] == 'room_created'
         current_room_id = result[:payload][:room_id]
         CONN_MUTEX.synchronize do
           CONNECTIONS[current_room_id] << ws
-          WS_USER[ws]          = user_id
-          USER_WS[user_id]     = ws
           USER_ROOM[user_id]   = current_room_id
         end
         ws.send(json_event(result[:event], result[:payload]))
@@ -134,6 +148,10 @@ get '/ws' do
             end
           end
           broadcast(room_id, 'player_reconnected', { user_id: user_id }) if reconnecting
+          room = ENGINE.get_room(room_id)
+          if room
+            ws.send(json_event('chat_history', { messages: room[:chat_messages] || [] }))
+          end
         end
         broadcast(room_id || current_room_id, result[:event], result[:payload])
 
@@ -160,6 +178,7 @@ get '/ws' do
       uid = WS_USER.delete(ws)
       if uid
         USER_WS.delete(uid)
+        ENGINE.remove_online_user(uid)
         rid = USER_ROOM[uid]       # keep USER_ROOM — room persists
         if rid
           CONNECTIONS[rid].delete(ws)
@@ -170,6 +189,7 @@ get '/ws' do
 
     # Room stays alive — just tell the other player the opponent is offline
     broadcast(rid, 'player_disconnected', { user_id: uid }) if rid && uid
+    broadcast_online_users
   end
 
   ws.rack_response
@@ -189,4 +209,22 @@ def broadcast(room_id, event, payload)
   conns = CONN_MUTEX.synchronize { CONNECTIONS[room_id].dup }
   msg   = json_event(event, payload)
   conns.each { |c| c.send(msg) }
+end
+
+def broadcast_online_users
+  users = CONN_MUTEX.synchronize {
+    connected_uids = USER_WS.keys
+    ENGINE.online_users.select { |uid, _| connected_uids.include?(uid) }.map do |uid, name|
+      { user_id: uid, name: name }
+    end
+  }
+  msg = json_event('online_users', { users: users })
+  CONN_MUTEX.synchronize { USER_WS.values.each { |c| c.send(msg) rescue nil } }
+end
+
+def send_to_user(user_id, event, payload)
+  ws = CONN_MUTEX.synchronize { USER_WS[user_id] }
+  if ws
+    ws.send(json_event(event, payload)) rescue nil
+  end
 end

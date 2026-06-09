@@ -104,7 +104,7 @@ export function Quiz({ userId, resumeRoomId, onBack, onGameChanged }: Props) {
                     'w-full px-3 py-2.5 rounded-xl text-sm font-medium border transition-all',
                     isCorrect ? 'border-green-600 bg-green-950 text-green-300' :
                     isWrong   ? 'border-red-600 bg-red-950 text-red-300' :
-                    isMyAnswer ? 'border-primary bg-primary-bg text-primary-accent' :
+                    isMyAnswer ? 'border-primary bg-primary-bg text-primary' :
                     answered ? 'border-zinc-700 text-zinc-500 cursor-default' :
                     'border-zinc-700 hover:border-primary text-zinc-300 cursor-pointer'
                   ].join(' ')}>
@@ -130,12 +130,12 @@ export function Quiz({ userId, resumeRoomId, onBack, onGameChanged }: Props) {
       {/* Done */}
       {state?.phase === 'done' && (
         <div className="text-center w-full">
-          <p className="text-xl font-bold text-primary-accent mb-3">Quiz finalizado!</p>
+          <p className="text-xl font-bold text-primary mb-3">Quiz finalizado!</p>
           <div className="flex flex-col gap-1 mb-4">
             {Object.entries(state.scores).sort(([,a],[,b]) => b-a).map(([p, sc]) => (
               <div key={p} className="flex justify-between bg-zinc-900 rounded-lg px-4 py-2">
                 <span className="text-white">{p === userId ? 'você' : p.slice(0,8)}</span>
-                <span className="font-bold text-primary-accent">{sc}/{state.total_questions}</span>
+                <span className="font-bold text-primary">{sc}/{state.total_questions}</span>
               </div>
             ))}
           </div>

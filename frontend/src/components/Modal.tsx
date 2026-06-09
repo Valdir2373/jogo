@@ -15,7 +15,7 @@ export function Modal({ title, children, onClose }: ModalProps) {
           {onClose && (
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-primary-accent text-2xl leading-none transition-colors"
+              className="text-gray-400 hover:text-primary text-2xl leading-none transition-colors"
             >
               ×
             </button>

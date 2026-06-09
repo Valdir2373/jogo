@@ -144,7 +144,7 @@ export function TicTacToe({ userId, resumeRoomId, onBack, onGameChanged }: TicTa
 
       <p className={`text-sm font-medium min-h-[1.25rem] ${
         !opponentOnline ? 'text-yellow-500'
-        : gameState?.winner === userId ? 'text-primary-accent'
+        : gameState?.winner === userId ? 'text-primary'
         : gameState?.winner ? 'text-zinc-400'
         : gameState?.draw   ? 'text-zinc-400'
         : isMyTurn ? 'text-white'
@@ -164,7 +164,7 @@ export function TicTacToe({ userId, resumeRoomId, onBack, onGameChanged }: TicTa
                 'transition-all duration-100 border focus:outline-none select-none',
                 isWinning ? 'bg-primary-bg border-primary' : 'bg-zinc-900 border-zinc-800',
                 clickable ? 'hover:border-primary-border hover:bg-zinc-800 cursor-pointer' : 'cursor-default',
-                cell === 'X' || cell === 'O' ? 'text-primary-accent' : 'text-white',
+                cell === 'X' || cell === 'O' ? 'text-primary' : 'text-white',
               ].join(' ')}>
               {cell ?? ''}
             </button>

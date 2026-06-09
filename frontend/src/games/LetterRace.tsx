@@ -89,7 +89,7 @@ export function LetterRace({ userId, resumeRoomId, onBack, onGameChanged }: Prop
         <>
           <div className="text-center">
             <p className="text-xs text-zinc-500">Rodada {state.round} · {state.category}</p>
-            <p className="text-5xl font-black text-primary-accent">{state.letter}</p>
+            <p className="text-5xl font-black text-primary">{state.letter}</p>
             <p className="text-xs text-zinc-600">Digite palavras que começam com essa letra</p>
           </div>
 
@@ -119,7 +119,7 @@ export function LetterRace({ userId, resumeRoomId, onBack, onGameChanged }: Prop
               <Button onClick={submitWords} className="w-full">Stop! 🛑</Button>
             </>
           ) : (
-            <p className="text-primary-accent font-semibold animate-pulse">
+            <p className="text-primary font-semibold animate-pulse">
               ✓ Enviado! Aguardando adversários...
             </p>
           )}
@@ -133,7 +133,7 @@ export function LetterRace({ userId, resumeRoomId, onBack, onGameChanged }: Prop
             <div key={p} className="bg-zinc-900 border border-zinc-800 rounded-xl p-3">
               <div className="flex justify-between mb-2">
                 <span className="font-semibold text-white">{p === userId ? 'você' : p.slice(0, 8)}</span>
-                <span className="text-primary-accent font-bold">+{r.points}pts</span>
+                <span className="text-primary font-bold">+{r.points}pts</span>
               </div>
               <div className="flex flex-wrap gap-1">
                 {r.valid.map(w => <span key={w} className="text-xs bg-green-950 border border-green-800 text-green-300 rounded px-1.5 py-0.5">{w}</span>)}

@@ -95,7 +95,7 @@ export function Rps({ userId, resumeRoomId, onBack, onGameChanged }: Props) {
               <div key={p} className="flex flex-col items-center gap-1">
                 <span className="text-3xl">{ICONS[lastResult.choices[p]] ?? lastResult.choices[p]}</span>
                 <span className="text-xs text-zinc-500">{p === userId ? 'você' : 'adversário'}</span>
-                {lastResult.winners.includes(p) && <span className="text-xs text-primary-accent font-bold">ganhou!</span>}
+                {lastResult.winners.includes(p) && <span className="text-xs text-primary font-bold">ganhou!</span>}
               </div>
             ))}
           </div>

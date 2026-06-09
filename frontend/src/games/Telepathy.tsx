@@ -55,7 +55,7 @@ export function Telepathy({ userId, resumeRoomId, onBack, onGameChanged }: Props
       <div className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-center">
         <p className="text-xs text-zinc-500 uppercase tracking-widest">Pontos do time</p>
         <div className="flex items-center gap-2 justify-center mt-1">
-          <span className="text-2xl font-bold text-primary-accent">{state?.score ?? 0}</span>
+          <span className="text-2xl font-bold text-primary">{state?.score ?? 0}</span>
           <span className="text-zinc-600">/</span>
           <span className="text-zinc-400">{state?.target ?? 10}</span>
         </div>
@@ -83,7 +83,7 @@ export function Telepathy({ userId, resumeRoomId, onBack, onGameChanged }: Props
       )}
       {state?.phase === 'answering' && submitted && (
         <div className="text-center">
-          <p className="text-primary-accent font-semibold">✓ Enviado: "{state.my_answer}"</p>
+          <p className="text-primary font-semibold">✓ Enviado: "{state.my_answer}"</p>
           <p className="text-zinc-500 text-sm mt-1 animate-pulse">
             Aguardando {(state.players.length - state.submitted_ids.length)} jogador(es)...
           </p>
@@ -113,7 +113,7 @@ export function Telepathy({ userId, resumeRoomId, onBack, onGameChanged }: Props
       {/* Won */}
       {state?.phase === 'won' && (
         <div className="text-center">
-          <p className="text-primary-accent text-xl font-bold">🧠 {state.target} pontos! Vocês têm telepatia!</p>
+          <p className="text-primary text-xl font-bold">🧠 {state.target} pontos! Vocês têm telepatia!</p>
           <div className="flex gap-2 mt-3">
             {!iVoted ? <Button onClick={room.voteRestart} className="w-full">Jogar de novo</Button>
               : !theyVoted ? <p className="text-zinc-500 text-sm">Aguardando...</p> : null}

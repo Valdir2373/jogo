@@ -87,7 +87,7 @@ export function MemoryGame({ userId, resumeRoomId, onBack, onGameChanged }: Prop
 
       {state?.phase === 'won' && (
         <div className="text-center">
-          <p className="text-primary-accent font-bold text-lg">Fim de jogo!</p>
+          <p className="text-primary font-bold text-lg">Fim de jogo!</p>
           <p className="text-zinc-400 text-sm">
             {Object.entries(state.scores).sort(([,a],[,b]) => b-a)[0]?.[0] === userId ? 'Você venceu!' : 'Adversário venceu!'}
           </p>

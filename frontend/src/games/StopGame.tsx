@@ -95,7 +95,7 @@ export function StopGame({ userId, resumeRoomId, onBack, onGameChanged }: Props)
           <div className="flex items-center justify-between w-full">
             <div className="text-center">
               <p className="text-xs text-zinc-500">Rodada {state.round}</p>
-              <p className="text-5xl font-black text-primary-accent">{state.letter}</p>
+              <p className="text-5xl font-black text-primary">{state.letter}</p>
             </div>
             <div className="text-right">
               <p className="text-xs text-zinc-500">Tempo</p>
@@ -125,7 +125,7 @@ export function StopGame({ userId, resumeRoomId, onBack, onGameChanged }: Props)
               </Button>
             </div>
           ) : (
-            <p className="text-primary-accent font-semibold animate-pulse">✓ Enviado! Aguardando adversários...</p>
+            <p className="text-primary font-semibold animate-pulse">✓ Enviado! Aguardando adversários...</p>
           )}
         </>
       )}

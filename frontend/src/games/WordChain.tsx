@@ -81,7 +81,7 @@ export function WordChain({ userId, resumeRoomId, onBack, onGameChanged }: Props
           <div className="text-center">
             <p className="text-xs text-zinc-600 uppercase tracking-widest">Palavra atual</p>
             <p className="text-2xl font-bold text-white">{state.current_word}</p>
-            <p className="text-primary-accent font-bold text-lg">→ começa com <span className="text-3xl">{state.last_letter}</span></p>
+            <p className="text-primary font-bold text-lg">→ começa com <span className="text-3xl">{state.last_letter}</span></p>
           </div>
 
           {/* Timer */}
@@ -123,7 +123,7 @@ export function WordChain({ userId, resumeRoomId, onBack, onGameChanged }: Props
 
       {state?.phase === 'over' && (
         <div className="text-center">
-          <p className="text-xl font-bold text-primary-accent">
+          <p className="text-xl font-bold text-primary">
             {state.winner === userId ? '🎉 Você venceu!' : '😅 Você perdeu.'}
           </p>
           <RestartVoting iVoted={iVoted} theyVoted={theyVoted} onVote={room.voteRestart} />

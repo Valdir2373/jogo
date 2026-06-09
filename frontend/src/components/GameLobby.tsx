@@ -61,12 +61,12 @@ export function GameLobby({ title, gameType, error, onCreateRoom, onBack }: Game
           <label className="text-xs text-zinc-500 uppercase tracking-widest">Máx. jogadores</label>
           <div className="flex gap-2 flex-wrap">
             <button onClick={() => setMaxPlayers(0)}
-              className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${maxPlayers === 0 ? 'border-primary bg-primary-bg text-primary-accent' : 'border-zinc-700 text-zinc-400 hover:border-zinc-500'}`}>
+              className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${maxPlayers === 0 ? 'border-primary bg-primary-bg text-primary' : 'border-zinc-700 text-zinc-400 hover:border-zinc-500'}`}>
               Padrão ({meta.maxPlayers})
             </button>
             {Array.from({ length: meta.maxPlayers - meta.minPlayers }, (_, i) => meta.minPlayers + i).map(n => (
               <button key={n} onClick={() => setMaxPlayers(n)}
-                className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${maxPlayers === n ? 'border-primary bg-primary-bg text-primary-accent' : 'border-zinc-700 text-zinc-400 hover:border-zinc-500'}`}>
+                className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${maxPlayers === n ? 'border-primary bg-primary-bg text-primary' : 'border-zinc-700 text-zinc-400 hover:border-zinc-500'}`}>
                 {n}
               </button>
             ))}
@@ -101,8 +101,8 @@ export function WaitingRoom({ roomId, onBack }: WaitingProps) {
       <h2 className="text-xl font-bold text-white">Sala criada</h2>
       <p className="text-zinc-500 text-sm">Compartilhe o código:</p>
       <div className="flex items-center gap-3 bg-zinc-900 border border-zinc-800 rounded-xl px-6 py-4">
-        <span className="text-3xl font-mono font-bold tracking-widest text-primary-accent">{roomId}</span>
-        <button onClick={copyRoomId} className="text-zinc-500 hover:text-primary-accent transition-colors ml-1">
+        <span className="text-3xl font-mono font-bold tracking-widest text-primary">{roomId}</span>
+        <button onClick={copyRoomId} className="text-zinc-500 hover:text-primary transition-colors ml-1">
           {copied ? '✓' : '⎘'}
         </button>
       </div>
@@ -133,7 +133,7 @@ export function GameHeader({ roomId, gameName, opponentOnline, gameVotes, myUser
           <span className={`w-2 h-2 rounded-full ${opponentOnline ? 'bg-green-500' : 'bg-red-500'}`} />
           <button
             onClick={() => setShowPicker(v => !v)}
-            className="flex items-center gap-1 px-2.5 py-1.5 bg-zinc-900 border border-zinc-700 hover:border-primary rounded-lg text-xs text-zinc-400 hover:text-primary-accent transition-all"
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-zinc-900 border border-zinc-700 hover:border-primary rounded-lg text-xs text-zinc-400 hover:text-primary transition-all"
             title="Achar sala / trocar jogo"
           >
             🔍 <span className="hidden sm:inline">Achar sala</span>
@@ -156,7 +156,7 @@ export function GameHeader({ roomId, gameName, opponentOnline, gameVotes, myUser
               <button key={g.type} onClick={() => { onVoteGame(g.type); setShowPicker(false) }}
                 className={[
                   'w-full text-left px-3 py-2 rounded-lg text-sm transition-all border',
-                  iV ? 'border-primary bg-primary-bg text-primary-accent'
+                  iV ? 'border-primary bg-primary-bg text-primary'
                      : 'border-zinc-700 hover:border-primary-border text-zinc-300',
                 ].join(' ')}>
                 <div className="flex justify-between items-center">
@@ -172,7 +172,7 @@ export function GameHeader({ roomId, gameName, opponentOnline, gameVotes, myUser
             <p className="text-xs text-zinc-500 text-center pt-1 animate-pulse">Aguardando o outro concordar...</p>
           )}
           {theirVote && !myVote && (
-            <p className="text-xs text-primary-accent text-center pt-1 animate-pulse">
+            <p className="text-xs text-primary text-center pt-1 animate-pulse">
               Querem mudar para {GAMES.find(g => g.type === theirVote)?.name}!
             </p>
           )}
@@ -202,7 +202,7 @@ export function RestartVoting({ iVoted, theyVoted, onVote, label = 'Jogar de nov
         </p>
       ) : null}
       {theyVoted && !iVoted && (
-        <p className="text-center text-primary-accent text-sm animate-pulse">
+        <p className="text-center text-primary text-sm animate-pulse">
           Alguém quer jogar de novo!
         </p>
       )}

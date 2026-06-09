@@ -36,12 +36,12 @@ function HangmanFigure({ wrongCount }: { wrongCount: number }) {
       <line x1="30"  y1="155" x2="30"  y2="5"   stroke="var(--primary-color)" strokeWidth="3" strokeLinecap="round" />
       <line x1="30"  y1="5"   x2="75"  y2="5"   stroke="var(--primary-color)" strokeWidth="3" strokeLinecap="round" />
       <line x1="75"  y1="5"   x2="75"  y2="25"  stroke="var(--primary-color)" strokeWidth="3" strokeLinecap="round" />
-      {wrongCount >= 1 && <circle cx="75" cy="35" r="10" stroke="white" strokeWidth="2.5" fill="none" />}
-      {wrongCount >= 2 && <line x1="75" y1="45" x2="75" y2="95" stroke="white" strokeWidth="2.5" strokeLinecap="round" />}
-      {wrongCount >= 3 && <line x1="75" y1="60" x2="52" y2="78" stroke="white" strokeWidth="2.5" strokeLinecap="round" />}
-      {wrongCount >= 4 && <line x1="75" y1="60" x2="98" y2="78" stroke="white" strokeWidth="2.5" strokeLinecap="round" />}
-      {wrongCount >= 5 && <line x1="75" y1="95" x2="52" y2="125" stroke="white" strokeWidth="2.5" strokeLinecap="round" />}
-      {wrongCount >= 6 && <line x1="75" y1="95" x2="98" y2="125" stroke="white" strokeWidth="2.5" strokeLinecap="round" />}
+      {wrongCount >= 1 && <circle cx="75" cy="35" r="10" stroke="var(--primary-color)" strokeWidth="2.5" fill="none" />}
+      {wrongCount >= 2 && <line x1="75" y1="45" x2="75" y2="95" stroke="var(--primary-color)" strokeWidth="2.5" strokeLinecap="round" />}
+      {wrongCount >= 3 && <line x1="75" y1="60" x2="52" y2="78" stroke="var(--primary-color)" strokeWidth="2.5" strokeLinecap="round" />}
+      {wrongCount >= 4 && <line x1="75" y1="60" x2="98" y2="78" stroke="var(--primary-color)" strokeWidth="2.5" strokeLinecap="round" />}
+      {wrongCount >= 5 && <line x1="75" y1="95" x2="52" y2="125" stroke="var(--primary-color)" strokeWidth="2.5" strokeLinecap="round" />}
+      {wrongCount >= 6 && <line x1="75" y1="95" x2="98" y2="125" stroke="var(--primary-color)" strokeWidth="2.5" strokeLinecap="round" />}
     </svg>
   )
 }
@@ -179,7 +179,7 @@ export function Hangman({ userId, resumeRoomId, onBack, onGameChanged }: Hangman
           <div className="w-full flex flex-col items-center gap-1">
             {gameState?.theme && (
               <p className="text-xs text-zinc-500 uppercase tracking-widest">
-                Tema: <span className="text-primary-accent">{gameState.theme}</span>
+                Tema: <span className="text-primary">{gameState.theme}</span>
               </p>
             )}
             <HangmanFigure wrongCount={wrongCount} />
@@ -201,7 +201,7 @@ export function Hangman({ userId, resumeRoomId, onBack, onGameChanged }: Hangman
           </div>
 
           {phase === 'won' && (
-            <p className="text-primary-accent font-semibold text-center">
+            <p className="text-primary font-semibold text-center">
               {isWordOwner ? 'Ninguém adivinhou — você venceu!' : 'Parabéns! Palavra adivinhada!'}
             </p>
           )}
@@ -232,7 +232,7 @@ export function Hangman({ userId, resumeRoomId, onBack, onGameChanged }: Hangman
                       guessed
                         ? correct ? 'bg-green-950 border-green-700 text-green-400 cursor-default'
                                   : 'bg-zinc-950 border-zinc-800 text-zinc-700 cursor-default'
-                        : 'bg-zinc-900 border-zinc-700 hover:border-primary hover:text-primary-accent text-zinc-200 cursor-pointer',
+                        : 'bg-zinc-900 border-zinc-700 hover:border-primary hover:text-primary text-zinc-200 cursor-pointer',
                     ].join(' ')}>
                     {letter}
                   </button>

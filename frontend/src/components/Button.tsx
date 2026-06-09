@@ -9,8 +9,8 @@ export function Button({ variant = 'primary', className = '', children, ...props
 
   const variants = {
     primary:   'bg-primary text-white hover:opacity-90 shadow-lg shadow-primary-border/40',
-    secondary: 'bg-zinc-900 text-primary-accent border border-primary-border hover:border-primary hover:text-primary-accent',
-    ghost:     'text-zinc-400 hover:text-primary-accent hover:bg-zinc-900',
+    secondary: 'bg-zinc-900 text-primary border border-primary-border hover:border-primary hover:text-primary',
+    ghost:     'text-zinc-400 hover:text-primary hover:bg-zinc-900',
   }
 
   return (

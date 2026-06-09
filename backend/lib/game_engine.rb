@@ -1,4 +1,5 @@
 require 'securerandom'
+require 'cgi'
 require_relative 'games/tic_tac_toe'
 require_relative 'games/hangman'
 require_relative 'games/guess_number'
@@ -42,7 +43,17 @@ class GameEngine
     @rooms      = {}
     @mutex      = Mutex.new
     @broadcaster = nil
+    @private_messages = []
+    @online_users = {}
     start_cleanup_thread
+  end
+
+  def online_users
+    @mutex.synchronize { @online_users.dup }
+  end
+
+  def remove_online_user(user_id)
+    @mutex.synchronize { @online_users.delete(user_id) }
   end
 
   def set_broadcaster(&block)
@@ -53,6 +64,9 @@ class GameEngine
     result = case data['action']
              when 'create_room'  then create_room(user_id, data)
              when 'game_vote'    then game_vote_action(user_id, data)
+             when 'send_chat'    then send_chat_action(user_id, data)
+             when 'announce'     then announce_presence(user_id, data)
+             when 'send_private' then send_private_action(user_id, data)
              when 'join', 'move', 'restart_vote',
                   'set_word', 'guess',
                   'set_number', 'guess',
@@ -185,6 +199,89 @@ class GameEngine
         }
       }
     end
+  end
+
+  def send_chat_action(user_id, data)
+    room_id = data['room_id']
+    text    = data['text'].to_s.strip
+    name    = data['sender_name'].to_s.strip
+
+    return { error: 'missing room_id' } unless room_id
+    return { error: 'message too long' } if text.length > 500
+
+    room = @mutex.synchronize { @rooms[room_id] }
+    return { error: 'room not found' } unless room
+    return { error: 'not in room' } unless room[:players].include?(user_id)
+
+    escaped_text = CGI.escapeHTML(text)
+    escaped_name = CGI.escapeHTML(name.empty? ? "Jogador #{user_id[0..3]}" : name)
+
+    room[:chat_messages] ||= []
+    msg = {
+      id: SecureRandom.uuid,
+      sender_id: user_id,
+      sender_name: escaped_name,
+      text: escaped_text,
+      timestamp: Time.now.to_i
+    }
+    room[:chat_messages] << msg
+    room[:chat_messages] = room[:chat_messages].last(100)
+    room[:last_activity] = Time.now
+
+    {
+      broadcast: true,
+      event: 'chat_message',
+      payload: msg
+    }
+  end
+
+  def announce_presence(user_id, data)
+    name = data['name'].to_s.strip
+    escaped_name = CGI.escapeHTML(name.empty? ? "Jogador #{user_id[0..3]}" : name)
+
+    @mutex.synchronize do
+      @online_users[user_id] = escaped_name
+    end
+
+    { event: 'presence_announced', payload: { user_id: user_id, name: escaped_name } }
+  end
+
+  def get_private_history(user_id)
+    @mutex.synchronize do
+      @private_messages.select { |m| m[:sender_id] == user_id || m[:recipient_id] == user_id }
+    end
+  end
+
+  def send_private_action(user_id, data)
+    recipient_id = data['recipient_id'].to_s
+    text         = data['text'].to_s.strip
+    name         = data['sender_name'].to_s.strip
+
+    return { error: 'missing recipient_id' } if recipient_id.empty?
+    return { error: 'message too long' } if text.length > 500
+
+    escaped_text = CGI.escapeHTML(text)
+    escaped_name = CGI.escapeHTML(name.empty? ? "Jogador #{user_id[0..3]}" : name)
+
+    msg = {
+      id:           SecureRandom.uuid,
+      sender_id:    user_id,
+      sender_name:  escaped_name,
+      recipient_id: recipient_id,
+      text:         escaped_text,
+      timestamp:    Time.now.to_i
+    }
+
+    @mutex.synchronize do
+      @private_messages << msg
+      @private_messages = @private_messages.last(1000)
+    end
+
+    {
+      private_pm:   true,
+      recipient_id: recipient_id,
+      msg:          msg
+    }
   end
 
   def room_action(user_id, data)
