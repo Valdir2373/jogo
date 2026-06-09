@@ -56,6 +56,12 @@ class GameEngine
     @mutex.synchronize { @online_users.delete(user_id) }
   end
 
+  def get_private_history(user_id)
+    @mutex.synchronize do
+      @private_messages.select { |m| m[:sender_id] == user_id || m[:recipient_id] == user_id }
+    end
+  end
+
   def set_broadcaster(&block)
     @broadcaster = block
   end
@@ -246,11 +252,6 @@ class GameEngine
     { event: 'presence_announced', payload: { user_id: user_id, name: escaped_name } }
   end
 
-  def get_private_history(user_id)
-    @mutex.synchronize do
-      @private_messages.select { |m| m[:sender_id] == user_id || m[:recipient_id] == user_id }
-    end
-  end
 
   def send_private_action(user_id, data)
     recipient_id = data['recipient_id'].to_s
