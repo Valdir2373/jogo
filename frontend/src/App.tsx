@@ -95,7 +95,14 @@ export default function App() {
   const [onlineUsers, setOnlineUsers] = useState<{ user_id: string; name: string }[]>([])
   const [showOnlineDrawer, setShowOnlineDrawer] = useState(false)
   const [selectedUser, setSelectedUser] = useState<{ user_id: string; name: string } | null>(null)
-  const [privateMessages, setPrivateMessages] = useState<PrivateMessage[]>([])
+  const [privateMessages, setPrivateMessages] = useState<PrivateMessage[]>(() => {
+    try {
+      const saved = localStorage.getItem('private_messages')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
   const [privateInputText, setPrivateInputText] = useState('')
   const [unreadSenders, setUnreadSenders] = useState<string[]>([])
   const privateEndRef = useRef<HTMLDivElement | null>(null)
@@ -126,12 +133,16 @@ export default function App() {
         setOnlineUsers(payload.users)
       } else if (data.event === 'private_history') {
         const payload = data.payload as { messages: PrivateMessage[] }
-        setPrivateMessages(payload.messages)
+        setPrivateMessages(prev => {
+          const all = [...prev, ...payload.messages]
+          const unique = all.filter((msg, idx, self) => self.findIndex(m => m.id === msg.id) === idx)
+          return unique.sort((a, b) => a.timestamp - b.timestamp)
+        })
       } else if (data.event === 'private_message') {
         const msg = data.payload as PrivateMessage
         setPrivateMessages(prev => {
           if (prev.some(m => m.id === msg.id)) return prev
-          return [...prev, msg]
+          return [...prev, msg].sort((a, b) => a.timestamp - b.timestamp)
         })
 
         if (msg.sender_id !== userId) {
@@ -153,6 +164,14 @@ export default function App() {
       privateEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
   }, [privateMessages, selectedUser])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('private_messages', JSON.stringify(privateMessages.slice(-1000)))
+    } catch (e) {
+      console.error('Failed to save private messages', e)
+    }
+  }, [privateMessages])
 
   useEffect(() => {
     const root = document.documentElement
