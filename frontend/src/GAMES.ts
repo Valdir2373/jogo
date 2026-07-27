@@ -1,4 +1,4 @@
-export const PERSON_NAME = 'Anna Rainha'
+export const PERSON_NAME = 'Giih Rainha'
 
 export interface GameMeta {
   type: string
